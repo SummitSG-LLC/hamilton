@@ -16,9 +16,12 @@ on:
         type: boolean
         default: false
 
+  # A schedule runs only on the default branch, so the daily run and its Slack report stay with
+  # `main`; `2.0` is checked by its pull requests alone.
   pull_request:
     branches:
         - main
+        - '2.0'
     paths:
         - '.github/**'
         - 'examples/**'
@@ -26,6 +29,8 @@ on:
         - 'plugin_tests/**'
         - 'tests/**'
         - 'pyproject.toml'
+        # the free-threaded and installed-wheel jobs run these
+        - 'scripts/ci/**'
         # tests/test_redirect_packages.py renders every redirect package from these
         - 'scripts/render_redirect_pyproject.py'
         - 'sf-hamilton*-redirect/**'
@@ -212,16 +217,87 @@ jobs:
             uv pip install "vaex>=4.19"
             uv run --no-sync pytest plugin_tests/h_vaex
 
+  test-free-threaded:
+    name: "Unit Tests (free-threaded)"
+    # Every job in this workflow needs this guard: a fork's scheduled run would spend runner
+    # time daily with no one to report to.
+    if: github.event_name != 'schedule' || github.repository == 'apache/hamilton'
+    runs-on: ubuntu-latest
+    env:
+      HAMILTON_TELEMETRY_ENABLED: false
+      # uv selects a free-threaded interpreter only when asked for one
+      UV_PYTHON: '3.14t'
+    steps:
+        - name: Install Graphviz
+          run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends graphviz
+
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Install uv
+          run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+        - name: Set up Python
+          uses: actions/setup-python@v5
+          with:
+            python-version: '3.14t'
+
+        # The `test-free-threaded` group leaves out the test dependencies that cannot run on this
+        # build; tests/conftest.py lists the tests skipped for each. The require_gil_disabled
+        # plugin fails the run when the GIL is enabled once the suite has made its imports.
+        - name: Test hamilton main package with the GIL disabled
+          env:
+            PYTHONPATH: scripts/ci
+          run: |
+            uv sync --group test-free-threaded
+            uv run python -VV
+            uv run pytest -p require_gil_disabled tests/ --ignore tests/integrations
+
+  installed-wheel:
+    name: "Installed Wheel"
+    # Every job in this workflow needs this guard: a fork's scheduled run would spend runner
+    # time daily with no one to report to.
+    if: github.event_name != 'schedule' || github.repository == 'apache/hamilton'
+    runs-on: ubuntu-latest
+    env:
+      HAMILTON_TELEMETRY_ENABLED: false
+    steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+
+        - name: Install uv
+          run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+        - name: Set up Python
+          uses: actions/setup-python@v5
+          with:
+            python-version: '3.11'
+
+        - name: Build the core wheel
+          run: uv build --wheel --out-dir "$RUNNER_TEMP/dist"
+
+        # The check runs from a directory outside the checkout, in an environment that holds only
+        # the wheel and its dependencies, so a file the wheel leaves out cannot come from the source.
+        - name: Build and execute a graph with the installed wheel
+          run: |
+            mkdir "$RUNNER_TEMP/wheel-check"
+            cp scripts/ci/installed_wheel_check.py "$RUNNER_TEMP/wheel-check/"
+            cd "$RUNNER_TEMP/wheel-check"
+            uv venv --python 3.11 .venv
+            uv pip install --python .venv/bin/python "$RUNNER_TEMP"/dist/apache_hamilton-*.whl
+            .venv/bin/python installed_wheel_check.py "$GITHUB_WORKSPACE"
+
   notify-slack:
     name: "Notify Slack"
-    needs: [static-checks, test]
-    # Posts only in apache/hamilton, which holds the webhook secret: once for a first-attempt
-    # scheduled run in which a job failed or hit its time limit (such a job ends cancelled while
-    # the run does not), and once for a manual run with notify-slack on, whether it passed or failed.
+    needs: [static-checks, test, test-free-threaded, installed-wheel]
+    # Posts only in apache/hamilton, which holds the webhook secret, and only for a run of `main`:
+    # once for a first-attempt scheduled run in which a job failed or hit its time limit (such a
+    # job ends cancelled while the run does not), and once for a manual run with notify-slack on,
+    # whether it passed or failed. A manual run of another branch, `2.0` included, posts nothing.
     # `!cancelled()` stops GitHub from adding its implicit `success()`, which would skip this job
     # whenever a job it needs failed.
     if: >-
-      !cancelled() && github.repository == 'apache/hamilton' && (
+      !cancelled() && github.repository == 'apache/hamilton' && github.ref == 'refs/heads/main' && (
         (github.event_name == 'schedule' && github.run_attempt == 1 &&
           (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))) ||
         (github.event_name == 'workflow_dispatch' && inputs.notify-slack))

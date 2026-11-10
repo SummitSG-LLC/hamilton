@@ -116,20 +116,20 @@ release = [
   "flit",
   "twine",
 ]
-test = [
+# The part of the test group that installs on a free-threaded build and leaves the GIL disabled; the
+# free-threaded CI job installs this group alone. tests/conftest.py lists the tests that need more.
+test-free-threaded = [
   "connectorx; python_version < '3.14'",
   "dask[complete]",
   "dask-expr>=1.1.14",
   "datasets>=2.18.0", # huggingface datasets -- https://github.com/huggingface/datasets/issues/6737#issuecomment-2107336816
   "diskcache",
-  "dlt",
   "fsspec",
   "graphviz",
   "kaleido!=1.5.1", # https://github.com/plotly/Kaleido/issues/487
   "kedro; python_version < '3.14'",
   "lancedb; python_version < '3.14'",
   "lightgbm; python_version < '3.14'",
-  "lxml",
   "lz4",
   "matplotlib",
   "mlflow>=3; python_version <= '3.13'", # stops uv backtracking to mlflow 1.x, which fails to import, to satisfy the pyarrow floor below
@@ -137,7 +137,6 @@ test = [
   "openpyxl", # for excel data loader
   "pandera[dask]",
   "plotly",
-  "polars",
   "pyarrow",
   "pyarrow>=26; python_version >= '3.15'", # first release with 3.15 wheels; without it, uv's universal resolution applies mlflow's pyarrow<26 to every Python
   "pydantic >=2.0",
@@ -153,6 +152,12 @@ test = [
   "xlsx2csv", # for excel data loader
   "xlsxwriter",  # Excel export requires 'xlsxwriter'
   "xxhash>=0.8.0", # exercises the high-performance fingerprinting path in tests
+]
+test = [
+  {include-group = "test-free-threaded"},
+  "dlt", # needs orjson, which refuses to build for a free-threaded interpreter
+  "lxml", # installs on a free-threaded build, but importing it turns the GIL back on
+  "polars", # has no free-threaded wheel
 ]
 docs = [
   {include-group = "dev"},

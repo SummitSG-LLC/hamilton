@@ -16,7 +16,9 @@
 # under the License.
 
 import os
+import pathlib
 import sys
+import sysconfig
 import uuid
 
 import pytest
@@ -39,6 +41,56 @@ if sys.version_info >= (3, 14):
             "plugins/test_huggingface_extensions.py",
         ]
     )
+
+# Tests that a free-threaded build cannot run, under the dependency that keeps them out. The
+# free-threaded CI job installs the `test-free-threaded` dependency group, which leaves these
+# dependencies out, and fails when anything it does import turns the GIL back on. An entry is a
+# test module, or one test in it written as "module::test"; both are relative to this directory.
+# The 3.14 list above holds on a free-threaded 3.14 build too, and so do the tests that skip
+# themselves on every 3.14 build: plugins/test_h_mlflow.py (mlflow) and
+# plugins/test_pandas_extensions.py::test_pandas_spss_reader (pyreadstat).
+FREE_THREADED_SKIPS = {
+    "dlt, whose dependency orjson refuses to build for a free-threaded interpreter": [
+        "plugins/test_dlt_extensions.py",
+    ],
+    "polars, which publishes no wheel that a free-threaded interpreter can install": [
+        "plugins/test_polars_extensions.py",
+        "plugins/test_polars_lazyframe_extensions.py",
+        "caching/test_fingerprinting.py::test_hash_polars_different_columns_differ",
+        "caching/test_fingerprinting.py::test_hash_polars_same_schema_same_data_matches",
+        "caching/test_fingerprinting.py::test_hash_polars_different_dtypes_differ",
+    ],
+    "lxml, which installs but turns the GIL back on when imported": [
+        "plugins/test_pandas_extensions.py::test_pandas_xml_reader",
+        "plugins/test_pandas_extensions.py::test_pandas_xml_writer",
+        "plugins/test_pandas_extensions.py::test_pandas_html_reader",
+    ],
+}
+_FREE_THREADED_BUILD = bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
+if _FREE_THREADED_BUILD:
+    collect_ignore.extend(
+        entry for entries in FREE_THREADED_SKIPS.values() for entry in entries if "::" not in entry
+    )
+
+
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Skips the single tests listed in ``FREE_THREADED_SKIPS`` on a free-threaded build."""
+    if not _FREE_THREADED_BUILD:
+        return
+    dependency_of = {
+        entry: dependency
+        for dependency, entries in FREE_THREADED_SKIPS.items()
+        for entry in entries
+        if "::" in entry
+    }
+    tests_dir = pathlib.Path(__file__).parent
+    for item in items:
+        if not item.path.is_relative_to(tests_dir):
+            continue
+        module = item.path.relative_to(tests_dir).as_posix()
+        dependency = dependency_of.get(f"{module}::{getattr(item, 'originalname', item.name)}")
+        if dependency is not None:
+            item.add_marker(pytest.mark.skip(reason=f"free-threaded build: needs {dependency}"))
 
 
 @pytest.fixture

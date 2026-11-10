@@ -2,7 +2,7 @@ Kind: shaped
 Type: bug
 Status: open
 Depends on:
-Claimed by:
+Claimed by: ticket-23 agent (session of 2026-11-10)
 
 # Fix the cache adapter's lost version entry when two mapped tasks write for the same node, on 1.x and on `2.0`
 

@@ -6,8 +6,9 @@ on:
     paths:
       - 'docs/**'
       - '.github/workflows/sphinx-docs.yml'
+  # `2.0` is listed for pull requests only: a push would deploy its docs to the staging site.
   pull_request:
-    branches: [ "main", "update_references" ]
+    branches: [ "main", "update_references", "2.0" ]
     paths:
       - 'docs/**'
       - '.github/workflows/sphinx-docs.yml'

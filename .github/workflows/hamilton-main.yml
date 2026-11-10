@@ -16,9 +16,12 @@ on:
         type: boolean
         default: false
 
+  # A schedule runs only on the default branch, so the daily run and its Slack report stay with
+  # `main`; `2.0` is checked by its pull requests alone.
   pull_request:
     branches:
         - main
+        - '2.0'
     paths:
         - '.github/**'
         - 'examples/**'
@@ -215,13 +218,14 @@ jobs:
   notify-slack:
     name: "Notify Slack"
     needs: [static-checks, test]
-    # Posts only in apache/hamilton, which holds the webhook secret: once for a first-attempt
-    # scheduled run in which a job failed or hit its time limit (such a job ends cancelled while
-    # the run does not), and once for a manual run with notify-slack on, whether it passed or failed.
+    # Posts only in apache/hamilton, which holds the webhook secret, and only for a run of `main`:
+    # once for a first-attempt scheduled run in which a job failed or hit its time limit (such a
+    # job ends cancelled while the run does not), and once for a manual run with notify-slack on,
+    # whether it passed or failed. A manual run of another branch, `2.0` included, posts nothing.
     # `!cancelled()` stops GitHub from adding its implicit `success()`, which would skip this job
     # whenever a job it needs failed.
     if: >-
-      !cancelled() && github.repository == 'apache/hamilton' && (
+      !cancelled() && github.repository == 'apache/hamilton' && github.ref == 'refs/heads/main' && (
         (github.event_name == 'schedule' && github.run_attempt == 1 &&
           (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))) ||
         (github.event_name == 'workflow_dispatch' && inputs.notify-slack))

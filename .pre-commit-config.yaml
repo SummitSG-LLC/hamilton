@@ -114,6 +114,7 @@ repos:
           ^\.github/.*\.md$|
           ^\.claude-plugin/.*SKILL\.md$|
           ^docs/|
+          ^tickets/|
           ^contrib/docs/|
           ^examples/|
           ^scripts/ci/license-templates/

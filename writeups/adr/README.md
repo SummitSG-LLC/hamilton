@@ -35,3 +35,8 @@ threads that produced them, so a later change can tell a deliberate choice from 
 | [2609-03](2609-03-resolving-sql-writes-and-statements.md) | How datasource-mode lineage resolves what a SQL write names |
 | [2609-04](2609-04-sqlite-attached-databases.md) | SQLite attached databases are named by their own file |
 | [2611-01](2611-01-polars-database-sql-metadata.md) | Polars database I/O records `sql_metadata` beside `file_metadata`; the pre-1.0 integration stays legacy-only |
+| [2611-10](2611-10-python-3-11-stays-the-floor-for-2-0.md) | Python 3.11 stays the minimum for Hamilton 2.0 |
+| [2611-11](2611-11-no-native-code-without-a-measured-bottleneck.md) | No native code in Hamilton 2.0 until a benchmark shows a bottleneck |
+| [2611-12](2611-12-2-0-prototype-is-an-end-to-end-skeleton-behind-a-switch.md) | The 2.0 prototype is an end-to-end skeleton behind an opt-in switch; the 1.x paths stay as the reference |
+| [2611-13](2611-13-fix-flow-between-main-and-2-0.md) | How fixes flow between `main` and `2.0` |
+| [2611-14](2611-14-src-layout-deferred-to-just-before-the-2-0-release.md) | The move to a `src/` layout waits until just before the 2.0 release |

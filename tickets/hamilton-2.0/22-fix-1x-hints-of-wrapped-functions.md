@@ -2,7 +2,7 @@ Kind: shaped
 Type: bug
 Status: open
 Depends on:
-Claimed by:
+Claimed by: ticket-22 agent (session of 2026-11-10)
 
 # Fix type-hint resolution for a function behind a wrapper from another module, on 1.x and on `2.0`
 

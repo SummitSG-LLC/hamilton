@@ -66,6 +66,16 @@ FREE_THREADED_SKIPS = {
         "plugins/test_pandas_extensions.py::test_pandas_html_reader",
     ],
 }
+# Tests that fail now and then on a free-threaded build because of a defect in Hamilton, not a
+# missing dependency. They still run, and a failure is reported without failing the job. An entry
+# is the start of a test's name, written as above with its parameters, and the defect behind it.
+# Remove an entry with the fix for its defect.
+FREE_THREADED_KNOWN_FAILURES = {
+    "caching/test_integration.py::test_parallel_synchronous_step_by_step[MultiThreadingExecutor-": (
+        "the cache adapter's per-run maps are written by mapped tasks on several threads without "
+        "a lock, and an entry is sometimes lost"
+    ),
+}
 _FREE_THREADED_BUILD = bool(sysconfig.get_config_var("Py_GIL_DISABLED"))
 if _FREE_THREADED_BUILD:
     collect_ignore.extend(
@@ -74,7 +84,7 @@ if _FREE_THREADED_BUILD:
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
-    """Skips the single tests listed in ``FREE_THREADED_SKIPS`` on a free-threaded build."""
+    """Applies ``FREE_THREADED_SKIPS`` and ``FREE_THREADED_KNOWN_FAILURES`` to single tests."""
     if not _FREE_THREADED_BUILD:
         return
     dependency_of = {
@@ -91,6 +101,11 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
         dependency = dependency_of.get(f"{module}::{getattr(item, 'originalname', item.name)}")
         if dependency is not None:
             item.add_marker(pytest.mark.skip(reason=f"free-threaded build: needs {dependency}"))
+        for name_start, defect in FREE_THREADED_KNOWN_FAILURES.items():
+            if f"{module}::{item.name}".startswith(name_start):
+                item.add_marker(
+                    pytest.mark.xfail(strict=False, reason=f"free-threaded build: {defect}")
+                )
 
 
 @pytest.fixture

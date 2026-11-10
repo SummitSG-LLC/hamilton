@@ -2,7 +2,7 @@ Kind: shaped
 Type: chore
 Status: open
 Depends on:
-Claimed by:
+Claimed by: ticket-01 agent (session of 2026-11-10)
 
 # Create the `2.0` branch on the fork and give it the checks `main` has
 

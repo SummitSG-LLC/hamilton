@@ -24,7 +24,7 @@ it costs, and the alternatives that were rejected. The records outlive the commi
 threads that produced them, so a later change can tell a deliberate choice from an accident.
 
 - File name: `YYMM-NN-short-title.md`, numbered in order. Numbers are never reused.
-- Status: `Accepted`, `Superseded by YYMM-NN`, or `Deprecated`. An accepted record is not edited to
+- Status: `Proposed` (awaiting the owner's decision), `Accepted`, `Superseded by YYMM-NN`, or `Deprecated`. An accepted record is not edited to
   change its decision; write a new record that supersedes it.
 - Sections: Status, Context, Decision, Consequences, Alternatives considered.
 
@@ -40,3 +40,4 @@ threads that produced them, so a later change can tell a deliberate choice from 
 | [2611-12](2611-12-2-0-prototype-is-an-end-to-end-skeleton-behind-a-switch.md) | The 2.0 prototype is an end-to-end skeleton behind an opt-in switch; the 1.x paths stay as the reference |
 | [2611-13](2611-13-fix-flow-between-main-and-2-0.md) | How fixes flow between `main` and `2.0` |
 | [2611-14](2611-14-src-layout-deferred-to-just-before-the-2-0-release.md) | The move to a `src/` layout waits until just before the 2.0 release |
+| [2611-15](2611-15-task-outcome-states-and-failure-policy.md) | Task outcome states and failure policy of the new runtime |

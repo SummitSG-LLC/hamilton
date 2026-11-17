@@ -44,10 +44,9 @@ if __name__ == "__main__":
     import asyncio
 
     import hamilton_async
-    from hamilton import base
-    from hamilton.experimental import h_async
+    from hamilton import async_driver, base
 
-    dr = h_async.AsyncDriver({}, hamilton_async, result_builder=base.DictResult())
+    dr = async_driver.AsyncDriver({}, hamilton_async, result_builder=base.DictResult())
     dr.display_all_functions("hamilton-async.png")
     loop = asyncio.get_event_loop()
     result = loop.run_until_complete(dr.execute(["joke_response"], inputs={"topic": "ice cream"}))

@@ -75,7 +75,7 @@ This assumes a project (1) exists -- if you want a different one you can go to t
 
 ## How it works
 
-Behind the scenes, we create a [GraphAdapter](../../hamilton/experimental/h_async.py)
+Behind the scenes, we create a [GraphAdapter](../../hamilton/async_driver.py)
 that turns every function into a coroutine. The function graph then executes, creating tasks for each node,
 that are awaited at the end. Thus no computation is complete until a final node
 is awaited.

@@ -21,8 +21,7 @@ import fastapi
 import pydantic
 import summarization
 
-from hamilton import base, driver
-from hamilton.experimental import h_async
+from hamilton import async_driver, base, driver
 
 # instantiate FastAPI app
 app = fastapi.FastAPI()
@@ -33,7 +32,7 @@ driver_config = dict(file_type="pdf")
 
 # instantiate the Hamilton driver; it will power all API endpoints
 # async driver for use with async functions
-async_dr = h_async.AsyncDriver(
+async_dr = async_driver.AsyncDriver(
     driver_config,
     summarization,  # python module containing function logic
     result_builder=base.DictResult(),

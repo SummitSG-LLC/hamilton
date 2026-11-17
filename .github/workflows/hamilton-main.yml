@@ -227,6 +227,8 @@ jobs:
       HAMILTON_TELEMETRY_ENABLED: false
       # uv selects a free-threaded interpreter only when asked for one
       UV_PYTHON: '3.14t'
+      # Scratch: force the GIL on; the job must fail
+      PYTHON_GIL: '1'
     steps:
         - name: Install Graphviz
           run: sudo apt-get update && sudo apt-get install --yes --no-install-recommends graphviz

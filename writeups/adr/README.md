@@ -40,3 +40,4 @@ threads that produced them, so a later change can tell a deliberate choice from 
 | [2611-12](2611-12-2-0-prototype-is-an-end-to-end-skeleton-behind-a-switch.md) | The 2.0 prototype is an end-to-end skeleton behind an opt-in switch; the 1.x paths stay as the reference |
 | [2611-13](2611-13-fix-flow-between-main-and-2-0.md) | How fixes flow between `main` and `2.0` |
 | [2611-14](2611-14-src-layout-deferred-to-just-before-the-2-0-release.md) | The move to a `src/` layout waits until just before the 2.0 release |
+| [2611-16](2611-16-catalog-artifact-and-diagnostic-formats.md) | The catalog artifact format and the diagnostic format of Hamilton 2.0 (Proposed) |

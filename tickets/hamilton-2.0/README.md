@@ -39,7 +39,7 @@ These were measured at commit `ef88b1e9` of `upstream/main`, on one machine with
 - Build: 103 ms per 1,000 nodes. The time goes to `typing.get_type_hints` and `inspect.signature`.
 - Default-path execute: 13 to 22 µs per node. The task-based path with the synchronous executor: 206 ms against 12.5 ms on the default path for 1,000 nodes.
 - `import hamilton.driver`: 431 ms; pandas is 287 ms and numpy 78 ms of it.
-- A linear chain of 1,500 nodes raises `RecursionError` on execution. A cyclic graph builds without error.
+- A linear chain of 1,500 nodes raises `RecursionError` on execution; with the default recursion limit the threshold is about 1,000 nodes (Ticket 26 measured a pass at 950 and `RecursionError` at 990 on CPython 3.11.15, and at 1,000 on 3.15.0). A cyclic graph builds without error.
 - pyrefly 1.4.1 over `hamilton/`: 1,289 errors with its `default` preset, 151 with the lenient `basic` preset it uses when unconfigured.
 - PyPI downloads of `apache-hamilton` by Python version, 2026-10-11 to 2026-11-09 (168,380 with a known version): 3.10 11.9%, 3.11 6.0%, 3.12 60.0%, 3.13 7.0%, 3.14 14.6%, 3.15 0.5%.
 - From the outline's own measurements: on free-threaded 3.14, four-worker mapped execution of a 32-kernel CPU workload ran 3.04 times faster than sequential; the task-based coordinator used 168 ms of main-thread CPU in a 169 ms run, against 2.70 ms in 140 ms for a plain `ThreadPoolExecutor`; a forced schedule loses one of two cache version entries in 80 of 80 attempts.

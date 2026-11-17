@@ -408,3 +408,27 @@ def test_deprecated_class_passes_keyword_arguments_through():
 
     assert DeprecatedDecorator()(fn=decorated, deprecator="mine") == (decorated, "mine")
     assert len(warnings) == 1
+
+
+def test_removed_in_2_0_names_the_replacement_and_the_migration_section():
+    error = deprecation.removed_in_2_0(
+        "old_api", explanation="It is gone.", use_this="new_api", section="old_api"
+    )
+    assert isinstance(error, DeprecationError)
+    assert str(error) == (
+        "old_api has been removed, as of hamilton version: 2.0.0. It is gone. "
+        "Instead, you should be using: new_api. "
+        'For migration, see: the section "old_api" of "Migration to 2.0" '
+        "(docs/migration-to-2.0.md in the Apache Hamilton repository)."
+    )
+
+
+def test_removed_in_2_0_without_a_replacement_names_only_the_migration_section():
+    message = deprecation.removed_in_2_0_message(
+        "old_api", explanation="It is gone.", use_this=None, section="Old things"
+    )
+    assert message == (
+        "old_api has been removed, as of hamilton version: 2.0.0. It is gone. "
+        'For migration, see: the section "Old things" of "Migration to 2.0" '
+        "(docs/migration-to-2.0.md in the Apache Hamilton repository)."
+    )

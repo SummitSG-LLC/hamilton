@@ -95,3 +95,4 @@ The synchronous path is not slower than the 1.x default path:
 - The harness's default-path execute scenarios (1,000 nodes, 10,000 nodes, and tiny nodes) are measured for the 1.x default path and for the new runtime, as the rule on performance claims requires, and the pull request cites the harness output files.
 - The verdict for each scenario is faster or no measurable difference.
 - If one is slower, the pull request names the limiter, and this Ticket stays open until the gap is removed or the owner states that they accept it.
+- On the inline backend, the order in which nodes start is deterministic for a given compiled graph, requested outputs and inputs, and the docs state the rule. A test runs one graph twice and compares the order an observer recorded. (Added 2026-11-17: the 1.x depth-first walk gives users a reproducible order through hooks, logs and side effects, and the maintainer's note lists walking order as its own layer; working reading.)

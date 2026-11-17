@@ -53,6 +53,7 @@ These rules bind every Ticket of the Hamilton 2.0 effort. "The owner" is Dev-iL.
 - A reader given an artifact with a schema version it does not know fails with a clear error. It does not guess.
 - The cost numbers here are measurements, not comparisons: there is no old side. Add the scenarios to the harness from Ticket 03. Do not change the scenarios Ticket 03 froze.
 - The read API is public API for callers outside `hamilton`, so the typing rule below applies to it.
+- The requirements query and the plan of Ticket 07 must name the same nodes for the same requested outputs, inputs and overrides; test it once both exist. Whether the catalog also offers the graph's sink nodes as default outputs ("running the DAG through to leaf nodes") waits for the maintainer's answer in `tickets/hamilton-2.0/questionnaire-maintainer-notes.md`.
 
 ## Suggested approach
 

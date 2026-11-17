@@ -58,6 +58,7 @@ These rules bind every Ticket of the Hamilton 2.0 effort. "The owner" is Dev-iL.
 - Whether a cache directory written with the switch off is reused with the switch on is not settled by the plan. Say what happens.
 - Take the expected values in the cache tests from counting node calls, not from the cache module's own records.
 - Exclusion-file entries that name this Ticket are yours to remove.
+- The maintainer's note (apache/hamilton discussion #1645, skrawcz's note of 2026-11-17 (discussioncomment-19685905)) lists "DAG short-circuiting (e.g. cached values)", "checkpointing" and "fingerprinting" as graph augmentation. This Ticket keeps the 1.x shape: the cache wraps node calls and visits every node on the path. Whether a stored value may prune the plan upstream of it is a question Ticket 07's decision record answers; checkpoint and resume, as distinct from fingerprint caching (apache/hamilton issue #940), is not in this plan and waits for the maintainer's answers in `tickets/hamilton-2.0/questionnaire-maintainer-notes.md`.
 
 ## Suggested approach
 

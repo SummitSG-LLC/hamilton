@@ -1,6 +1,6 @@
 Kind: shaped
 Type: chore
-Status: open
+Status: done
 Depends on:
 Claimed by:
 

@@ -29,6 +29,8 @@ on:
         - 'plugin_tests/**'
         - 'tests/**'
         - 'pyproject.toml'
+        # the benchmark harness; its tests run below
+        - 'benchmarks/**'
         # CI jobs run scripts from here
         - 'scripts/ci/**'
         # tests/test_redirect_packages.py renders every redirect package from these
@@ -125,6 +127,13 @@ jobs:
           run: |
             uv sync --group test
             uv run pytest tests/ --cov=hamilton --ignore tests/integrations
+
+        # Correctness only: every scenario runs once and is checked against its oracle. No step
+        # here fails on a timing.
+        - name: Test the benchmark harness
+          run: |
+            uv sync --group test
+            uv run pytest benchmarks/tests
 
 
         - name: Test integrations
@@ -252,6 +261,13 @@ jobs:
             uv sync --group test-free-threaded
             uv run python -VV
             uv run pytest -p require_gil_disabled tests/ --ignore tests/integrations
+
+        # The harness's workers are separate processes, so its test checks that each worker
+        # reported the GIL disabled; the plugin covers the pytest process.
+        - name: Test the benchmark harness with the GIL disabled
+          env:
+            PYTHONPATH: scripts/ci
+          run: uv run pytest -p require_gil_disabled benchmarks/tests
 
   installed-wheel:
     name: "Installed Wheel"

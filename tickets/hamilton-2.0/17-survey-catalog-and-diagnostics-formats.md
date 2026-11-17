@@ -75,6 +75,7 @@ These rules bind every Ticket of the Hamilton 2.0 effort. "The owner" is Dev-iL.
 - Decide the terms before drafting (catalog, artifact, diagnostic, code, severity, location) and use each with one meaning for every option compared.
 - Number the decision record with the next free number in the current month's series under `writeups/adr/`, skipping `2611-02` to `2611-09`: the records proposed upstream in apache/hamilton pull request #1809 use those. Follow `writeups/adr/README.md`.
 - The decision record states what the owner decided. Do not write it as decided before the owner has said so; a draft that awaits the decisions must say that it awaits them.
+- State on 2026-11-17: the survey is delivered for review in SummitSG-LLC/hamilton#7 (branch `2.0-ticket-17`): the report `writeups/surveys/catalog-and-diagnostic-formats.md` and ADR 2611-16, status Proposed. The Ticket stays open until Dev-iL decides D1 to D8 and the record states those decisions; Tickets 18 and 19 stay blocked until then. If D2 is accepted as recommended (a reader rejects an unknown major version and accepts a newer minor one), Ticket 19's reader rule changes from "a schema version it does not know" to "a major schema version it does not know".
 
 ## Definition of done
 

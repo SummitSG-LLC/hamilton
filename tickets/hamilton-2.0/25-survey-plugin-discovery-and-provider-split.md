@@ -73,6 +73,7 @@ These rules bind every Ticket of the Hamilton 2.0 effort. "The owner" is Dev-iL.
 - Give the decision record the next free number in the current month's series under `writeups/adr/`, skipping `2611-02` to `2611-09`, which the records proposed upstream in apache/hamilton pull request #1809 use. Follow `writeups/adr/README.md`.
 - Do not post a question on the upstream discussion or on an issue of `apache/hamilton` without the owner's go for that act.
 - The pull request for this Ticket carries the report in place of proof runs.
+- State on 2026-11-17: the survey is delivered for review in SummitSG-LLC/hamilton#8 (branch `2.0-ticket-25`): the report `writeups/surveys/plugin-discovery-and-provider-split.md` and ADR 2611-17, status Proposed. It proposes entry-point discovery in a `hamilton.extensions` group with static manifests and lazy loading (rules R1 to R8), and Polars and pandas as the only provider distributions, and lists nine owner decisions with recommendations. The Ticket stays open until Dev-iL decides them; then the Decision section of ADR 2611-17 is rewritten from that statement and set to Accepted. Debt: measurements are ad hoc (no harness yet, a CPU without AVX2, a shared machine); no per-integration usage data; the PPMC's release capacity is unknown; three standalone extras fixes for `main` (the outdated `vaex` marker, the `mcp` extra's fastmcp cap below 4, and the `experiments` extra declaring pandas after Ticket 21).
 
 ## Definition of done
 

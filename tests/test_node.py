@@ -245,3 +245,8 @@ async def test_subdag_async():
     assert new_args[1] == "d"
     assert inspect.iscoroutinefunction(new_node.callable)
     assert await new_node(**{"c": 2, "d": "abc"}) == 5
+
+
+def test_scratch_ci_must_fail():
+    """Scratch: proves that CI on pull requests into 2.0 goes red on a broken core test."""
+    assert False

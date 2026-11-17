@@ -124,26 +124,6 @@ def test_parametrized_with_multiple_params():
     assert called_2 == ("value_2", "static_param")
 
 
-def test_parametrized_input():
-    annotation = function_modifiers.parametrized_input(
-        parameter="parameter",
-        variable_inputs={
-            "input_1": ("test_1", "Function with first column as input"),
-            "input_2": ("test_2", "Function with second column as input"),
-        },
-    )
-
-    def identity(parameter: Any, static: Any) -> Any:
-        return parameter, static
-
-    nodes = annotation.expand_node(node.Node.from_fn(identity), {}, identity)
-    assert len(nodes) == 2
-    nodes = sorted(nodes, key=lambda n: n.name)
-    assert [n.name for n in nodes] == ["test_1", "test_2"]
-    assert set(nodes[0].input_types.keys()) == {"static", "input_1"}
-    assert set(nodes[1].input_types.keys()) == {"static", "input_2"}
-
-
 def test_parametrize_sources_validate_param_name():
     """Tests validate function of parameterize_sources capturing bad param name usage."""
     annotation = function_modifiers.parameterize_sources(

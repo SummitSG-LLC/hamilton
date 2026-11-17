@@ -467,15 +467,21 @@ class parameterize_values(parameterize):
         )
 
 
-@deprecation.deprecated(
-    warn_starting=(1, 10, 0),
-    fail_starting=(2, 0, 0),
-    use_this=parameterize_values,
-    explanation="We now support three parametrize decorators. @parameterize, @parameterize_values, and @parameterize_inputs",
-    migration_guide="https://github.com/apache/hamilton/blob/main/decorators.md#migrating-parameterized",
-)
-class parametrized(parameterize_values):
-    pass
+def _removed_parameterization(name: str, use_this: str) -> deprecation.DeprecationError:
+    return deprecation.removed_in_2_0(
+        name,
+        explanation="Three decorators replace the older parameterization decorators: @parameterize, "
+        "@parameterize_values and @parameterize_sources.",
+        use_this=use_this,
+        section="parametrized, parametrized_input and parameterized_inputs",
+    )
+
+
+class parametrized:
+    """Removed in 2.0: using it raises a DeprecationError. Use ``@parameterize_values`` instead."""
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        raise _removed_parameterization("@parametrized", use_this="@parameterize_values")
 
 
 class parameterize_sources(parameterize):
@@ -502,12 +508,8 @@ class parameterize_sources(parameterize):
         """Constructor for a modifier that expands a single function into n, each of which corresponds to replacing\
         some subset of the specified parameters with specific upstream nodes.
 
-        Note this decorator and `@parametrized_input` are similar, except this one allows multiple \
-        parameters to be mapped to multiple function arguments (and it fixes the spelling mistake).
-
-        `parameterized_sources` allows you keep your code DRY by reusing the same function but replace the inputs \
-        to create multiple corresponding distinct outputs. We see here that `parameterized_inputs` allows you to keep \
-        your code DRY by reusing the same function to create multiple distinct outputs. The key word arguments passed \
+        `parameterize_sources` allows you keep your code DRY by reusing the same function but replace the inputs \
+        to create multiple corresponding distinct outputs. The key word arguments passed \
         have to have the following structure:
             > OUTPUT_NAME = Mapping of function argument to input that should go into it.
 
@@ -535,55 +537,18 @@ class parameterize_sources(parameterize):
         )
 
 
-@deprecation.deprecated(
-    warn_starting=(1, 10, 0),
-    fail_starting=(2, 0, 0),
-    use_this=parameterize_sources,
-    explanation="We now support three parametrize decorators. @parameterize, "
-    "@parameterize_values, and @parameterize_inputs",
-    migration_guide="https://github.com/apache/hamilton/blob/main/decorators.md#migrating"
-    "-parameterized",
-)
-class parametrized_input(parameterize):
-    def __init__(self, parameter: str, variable_inputs: dict[str, tuple[str, str]]):
-        """Constructor for a modifier that expands a single function into n, each of which
-        corresponds to the specified parameter replaced by a *specific input column*.
+class parametrized_input:
+    """Removed in 2.0: using it raises a DeprecationError. Use ``@parameterize_sources`` instead."""
 
-        Note this decorator and `@parametrized` are quite similar, except that the input here is another DAG node,
-        i.e. column, rather than some specific value.
-
-        The `parameterized_input` allows you keep your code DRY by reusing the same function but replace the inputs
-        to create multiple corresponding distinct outputs. The _parameter_ key word argument has to match one of the
-        arguments in the function. The rest of the arguments are pulled from items inside the DAG.
-        The _assigned_inputs_ key word argument takes in a dictionary of \
-        input_column -> tuple(Output Name, Documentation string).
-
-        :param parameter: Parameter to expand on.
-        :param variable_inputs: A map of tuple of [parameter names, documentation] to values
-        """
-        for val in variable_inputs.values():
-            if not isinstance(val, tuple):
-                raise base.InvalidDecoratorException(
-                    f"assigned_output key is incorrect: {node}. The parameterized decorator needs a dict of "
-                    "input column -> [name, description] to function."
-                )
-        super(parametrized_input, self).__init__(
-            **{
-                output: ({parameter: source(value)}, documentation)
-                for value, (output, documentation) in variable_inputs.items()
-            }
-        )
+    def __init__(self, *args: Any, **kwargs: Any):
+        raise _removed_parameterization("@parametrized_input", use_this="@parameterize_sources")
 
 
-@deprecation.deprecated(
-    warn_starting=(1, 10, 0),
-    fail_starting=(2, 0, 0),
-    use_this=parameterize_sources,
-    explanation="We now support three parametrize decorators. @parameterize, @parameterize_values, and @parameterize_inputs",
-    migration_guide="https://github.com/apache/hamilton/blob/main/decorators.md#migrating-parameterized",
-)
-class parameterized_inputs(parameterize_sources):
-    pass
+class parameterized_inputs:
+    """Removed in 2.0: using it raises a DeprecationError. Use ``@parameterize_sources`` instead."""
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        raise _removed_parameterization("@parameterized_inputs", use_this="@parameterize_sources")
 
 
 class extract_columns(base.SingleNodeNodeTransformer):

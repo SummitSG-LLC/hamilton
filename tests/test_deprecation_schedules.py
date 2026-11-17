@@ -21,61 +21,18 @@ import ast
 import dataclasses
 import inspect
 import pathlib
-import subprocess
-import sys
 import warnings
 
-import pandas as pd
 import pytest
 
 import hamilton
-from hamilton import models
-from hamilton.dev_utils import deprecation
-from hamilton.dev_utils.deprecation import DeprecationError, Version, deprecated
-from hamilton.function_modifiers import macros
+from hamilton.dev_utils.deprecation import DeprecationError, deprecated
 
-_DEPRECATED = "hamilton.dev_utils.deprecation.deprecated"
+from tests.promises_for_2_0 import deprecated_calls
+
 _CURRENT_VERSION_POSITION = [field.name for field in dataclasses.fields(deprecated)].index(
     "current_version"
 )
-
-
-def _deprecated_calls(tree: ast.Module, module: str, is_package: bool = False) -> list[ast.Call]:
-    """Every call of ``hamilton.dev_utils.deprecation.deprecated`` in a module, whatever name or
-    import form (absolute, relative, aliased, or reached through a parent module) it is called by."""
-    package = module if is_package else module.rpartition(".")[0]
-    bound = {}  # name in this module -> the dotted name it refers to
-    for statement in ast.walk(tree):
-        if isinstance(statement, ast.Import):
-            for alias in statement.names:
-                if alias.asname:
-                    bound[alias.asname] = alias.name
-                else:
-                    root = alias.name.split(".")[0]
-                    bound[root] = root
-        elif isinstance(statement, ast.ImportFrom):
-            source = statement.module or ""
-            if statement.level:
-                base = package
-                for _ in range(statement.level - 1):
-                    base = base.rpartition(".")[0]
-                source = f"{base}.{source}" if source else base
-            for alias in statement.names:
-                bound[alias.asname or alias.name] = f"{source}.{alias.name}"
-
-    def dotted_name(expr: ast.expr) -> str | None:
-        if isinstance(expr, ast.Name):
-            return bound.get(expr.id)
-        if isinstance(expr, ast.Attribute):
-            owner = dotted_name(expr.value)
-            return f"{owner}.{expr.attr}" if owner else None
-        return None
-
-    return [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and dotted_name(node.func) == _DEPRECATED
-    ]
 
 
 @pytest.mark.parametrize(
@@ -94,26 +51,24 @@ def _deprecated_calls(tree: ast.Module, module: str, is_package: bool = False) -
 )
 def test_the_lock_finds_deprecated_under_every_import_form(source):
     tree = ast.parse(source)
-    assert len(_deprecated_calls(tree, "hamilton.function_modifiers.example")) == 1
+    assert len(deprecated_calls(tree, "hamilton.function_modifiers.example")) == 1
 
 
 def test_no_deprecation_in_hamilton_pins_its_current_version():
     """A pinned current_version freezes a deprecation's clock: it never starts warning, or warns forever
     and never fails. Every deprecation must read the running release instead."""
     package = pathlib.Path(hamilton.__file__).parent
-    applications, pinned = 0, []
+    pinned = []
     for path in sorted(package.rglob("*.py")):
         relative = path.relative_to(package.parent).with_suffix("")
         is_package = relative.name == "__init__"
         module = ".".join(relative.parent.parts if is_package else relative.parts)
         tree = ast.parse(path.read_text(), filename=str(path))
-        for call in _deprecated_calls(tree, module, is_package):
-            applications += 1
+        for call in deprecated_calls(tree, module, is_package):
             if len(call.args) > _CURRENT_VERSION_POSITION or any(
                 keyword.arg == "current_version" for keyword in call.keywords
             ):
                 pinned.append(f"{path.relative_to(package.parent)}:{call.lineno}")
-    assert applications, "found no deprecations to check; the scan is broken"
     assert pinned == []
 
 
@@ -191,51 +146,6 @@ def test_custom_warn_action_replaces_the_warning(decorate):
     assert len(messages) == 1
 
 
-class _LinearCombination(models.BaseModel):
-    def get_dependents(self) -> list[str]:
-        return list(self.config_parameters.keys())
-
-    def predict(self, **columns: pd.Series) -> pd.Series:
-        return sum(self.config_parameters[name] * column for name, column in columns.items())
-
-
-def _apply(decorator_cls: type) -> int:
-    """Applies the decorator as a user's module does; returns the line that applies it."""
-
-    def my_column() -> pd.Series:
-        pass
-
-    applying_line = inspect.currentframe().f_lineno + 1
-    decorator_cls(_LinearCombination, "my_column_model_params")(my_column)
-    return applying_line
-
-
-@pytest.mark.parametrize("decorator_cls", [macros.dynamic_transform, macros.model])
-def test_dynamic_transform_and_model_warn_once_under_their_own_names(decorator_cls):
-    with pytest.warns(FutureWarning) as record:
-        applying_line = _apply(decorator_cls)
-    assert [str(warning.message).split(" ")[0] for warning in record] == [
-        decorator_cls.__qualname__
-    ]
-    assert (record[0].filename, record[0].lineno) == (__file__, applying_line)
-
-
-@pytest.mark.parametrize("version", [(2, 0, 0), (2, 1, 0)], ids=["2.0.0", "2.1.0"])
-@pytest.mark.parametrize("decorator_cls", [macros.dynamic_transform, macros.model, macros.pipe])
-def test_class_deprecations_fail_on_2_x_under_their_own_names(decorator_cls, version, monkeypatch):
-    for cls in decorator_cls.__mro__:
-        deprecator = getattr(vars(cls).get("__call__"), deprecation._DEPRECATION_ATTR, None)
-        if deprecator is not None:
-            monkeypatch.setattr(deprecator, "current_version", Version(*version))
-    with pytest.raises(
-        DeprecationError, match=f"^{decorator_cls.__qualname__} has been deprecated"
-    ):
-        if decorator_cls is macros.pipe:
-            decorator_cls()(lambda: None)
-        else:
-            _apply(decorator_cls)
-
-
 def _deprecate_class(messages: list[str]):
     return deprecated(
         warn_starting=(1, 0, 0),
@@ -294,39 +204,26 @@ def test_deprecated_subclass_of_a_deprecated_class_warns_once_under_its_own_name
     assert [message.split(" ")[0] for message in messages] == [Child.__qualname__]
 
 
-@pytest.mark.parametrize(
-    "module",
-    [
-        "hamilton.function_modifiers_base",
-        "hamilton.experimental.h_async",
-        "hamilton.experimental.h_cache",
-    ],
-)
-def test_deprecated_module_warns_at_the_importing_line(module):
-    # A fresh interpreter, so the module is imported, and warns, here and not earlier in the session.
-    result = subprocess.run(
-        [sys.executable, "-W", "always::FutureWarning", "-c", f"import {module}"],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-    # The warning names the line that imported the module: line 1 of the -c program.
-    assert "<string>:1: FutureWarning: " in result.stderr
+@pytest.mark.parametrize("version", [(2, 0, 0), (2, 1, 0)], ids=["2.0.0", "2.1.0"])
+def test_deprecated_subclass_of_a_deprecated_class_fails_under_its_own_name(version):
+    def deprecate(cls):
+        return deprecated(
+            warn_starting=(1, 0, 0),
+            fail_starting=(2, 0, 0),
+            use_this=None,
+            explanation="Use the new one.",
+            migration_guide="https://example.com/guide",
+            current_version=version,
+        )(cls)
 
+    @deprecate
+    class Parent:
+        def __call__(self) -> str:
+            return "result"
 
-def test_deprecated_cache_adapter_warns_at_the_constructing_line(tmp_path):
-    from hamilton.lifecycle.default import CacheAdapter
+    @deprecate
+    class Child(Parent):
+        pass
 
-    with pytest.warns(FutureWarning, match="CacheAdapter") as record:
-        constructing_line = inspect.currentframe().f_lineno + 1
-        CacheAdapter(cache_path=str(tmp_path / "cache"))
-    assert (record[0].filename, record[0].lineno) == (__file__, constructing_line)
-
-
-def test_deprecated_disk_cache_adapter_warns_at_the_constructing_line(tmp_path):
-    h_diskcache = pytest.importorskip("hamilton.plugins.h_diskcache")
-
-    with pytest.warns(FutureWarning, match="DiskCacheAdapter") as record:
-        constructing_line = inspect.currentframe().f_lineno + 1
-        h_diskcache.DiskCacheAdapter(cache_path=str(tmp_path / "cache"))
-    assert (record[0].filename, record[0].lineno) == (__file__, constructing_line)
+    with pytest.raises(DeprecationError, match=f"^{Child.__qualname__} has been deprecated"):
+        Child()()

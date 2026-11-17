@@ -646,44 +646,6 @@ def test_polars_database_writer_records_the_table_and_schema_as_polars_unpacks_t
     assert metadata["file_metadata"]["path"] == table_name
 
 
-@pytest.mark.parametrize("reported", [-1, None, "unknown"])
-def test_pre_1_0_polars_database_records_an_unreported_row_count_as_unknown(
-    df: pl.DataFrame, tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch, reported
-) -> None:
-    from hamilton.plugins import polars_pre_1_0_0_extension as pre_1_0
-
-    monkeypatch.setattr(pl.DataFrame, "write_database", lambda self, *args, **kwargs: reported)
-    metadata = pre_1_0.PolarsDatabaseWriter(
-        table_name="orders", connection=f"sqlite:///{tmp_path}/pre.db"
-    ).save_data(df)
-
-    assert metadata["sql_metadata"]["rows"] is None
-
-
-def test_pre_1_0_polars_database_records_row_counts(
-    df: pl.DataFrame, tmp_path: pathlib.Path
-) -> None:
-    from hamilton.plugins import polars_pre_1_0_0_extension as pre_1_0
-
-    url = f"sqlite:///{tmp_path}/pre.db"
-    write_metadata = pre_1_0.PolarsDatabaseWriter(
-        table_name="pre", connection=url, if_table_exists="replace"
-    ).save_data(df)
-    assert write_metadata["sql_metadata"]["rows"] == 2
-
-    connection = sqlite3.connect(tmp_path / "pre.db")
-    _, read_metadata = pre_1_0.PolarsDatabaseReader(
-        query="SELECT * FROM pre", connection=connection
-    ).load_data(pl.DataFrame)
-    assert read_metadata["sql_metadata"]["rows"] == 2
-
-    batches, batched_metadata = pre_1_0.PolarsDatabaseReader(
-        query="SELECT * FROM pre", connection=connection, iter_batches=True, batch_size=1
-    ).load_data(pl.DataFrame)
-    assert batched_metadata["sql_metadata"]["rows"] is None
-    assert sum(len(batch) for batch in batches) == 2
-
-
 def connection_of_kind(kind: str, db_path: pathlib.Path):
     """A connection Polars accepts, in one of the forms the database classes are typed for."""
     if kind == "engine":

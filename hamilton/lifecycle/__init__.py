@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+from hamilton.dev_utils import deprecation
+
 from .api import (  # noqa: F401
     EdgeConnectionHook,
     GraphAdapter,
@@ -41,7 +43,20 @@ from .default import (  # noqa: F401
     accept_error_sentinels,
 )
 
-PrintLnHook = PrintLn  # for backwards compatibility -- this will be removed in 2.0
+
+def __getattr__(name: str):
+    # The 1.x alias PrintLnHook is gone; reading it names its replacement instead of failing silently.
+    # A DeprecationError rather than an AttributeError, because `from hamilton.lifecycle import PrintLnHook`
+    # replaces an AttributeError with a generic ImportError and drops its message.
+    if name == "PrintLnHook":
+        raise deprecation.removed_in_2_0(
+            "hamilton.lifecycle.PrintLnHook",
+            explanation="It was another name for PrintLn.",
+            use_this="hamilton.lifecycle.PrintLn",
+            section="PrintLnHook",
+        )
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 # All the following types are public facing
 __all__ = [
@@ -52,7 +67,6 @@ __all__ = [
     "NodeExecutionHook",
     "EdgeConnectionHook",
     "PrintLn",
-    "PrintLnHook",  # for backwards compatibility this will be removed in 2.0
     "PDBDebugger",
     "GraphConstructionHook",
     "GraphExecutionHook",

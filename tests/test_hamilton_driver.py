@@ -51,7 +51,7 @@ TODO -- move any execution tests to tests the graph executor capabilities on the
 @pytest.mark.parametrize(
     "driver_factory",
     [
-        (lambda: Driver({"a": 1})),
+        (lambda: Driver({"a": 1}, adapter=base.SimplePythonGraphAdapter(base.DictResult()))),
         (
             lambda: (
                 Builder()
@@ -65,14 +65,20 @@ TODO -- move any execution tests to tests the graph executor capabilities on the
 )
 def test_driver_validate_input_types(driver_factory):
     dr = driver_factory()
-    results = dr.raw_execute(["a"])
+    results = dr.execute(["a"])
     assert results == {"a": 1}
 
 
 @pytest.mark.parametrize(
     "driver_factory",
     [
-        (lambda: Driver({}, tests.resources.very_simple_dag)),
+        (
+            lambda: Driver(
+                {},
+                tests.resources.very_simple_dag,
+                adapter=base.SimplePythonGraphAdapter(base.DictResult()),
+            )
+        ),
         (
             lambda: (
                 Builder()
@@ -86,7 +92,7 @@ def test_driver_validate_input_types(driver_factory):
 )
 def test_driver_validate_runtime_input_types(driver_factory):
     dr = driver_factory()
-    results = dr.raw_execute(["b"], inputs={"a": 1})
+    results = dr.execute(["b"], inputs={"a": 1})
     assert results == {"b": 1}
 
 

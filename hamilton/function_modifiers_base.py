@@ -15,18 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# Quick hack to make this a backwards compatible refactor
-# This allows us to define everything within the function_modifiers directory, and just refer to that
-# While maintaining old imports
-import warnings
+"""Removed in 2.0: importing this module raises an ImportError that says what to use instead."""
 
-from hamilton.function_modifiers.base import *  # noqa F403
+from hamilton.dev_utils import deprecation
 
-warnings.warn(
-    "Import of this module is deprecated, and will be removed in a 2.0 release. In fact, "
-    "this is not a public-facing API, so if you're hitting this message either we're internally "
-    "importing the wrong one or you're doing something fancy. Either way, \n"
-    "please replace with `from hamilton.function_modifiers import base as fm_base`.",
-    FutureWarning,
-    stacklevel=2,
+raise ImportError(
+    deprecation.removed_in_2_0_message(
+        "hamilton.function_modifiers_base",
+        explanation="It only re-exported hamilton.function_modifiers.base, which was never a public API.",
+        use_this="hamilton.function_modifiers.base",
+        section="hamilton.function_modifiers_base",
+    ),
+    name=__name__,
 )

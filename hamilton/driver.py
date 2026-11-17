@@ -27,7 +27,6 @@ import sys
 # required if we want to run this code stand alone.
 import typing
 import uuid
-import warnings
 from collections.abc import Callable, Collection, Sequence
 from datetime import datetime
 from types import ModuleType
@@ -539,18 +538,19 @@ class Driver:
 
         :param final_vars: the final list of outputs we want to compute.
         :param overrides: values that will override "nodes" in the DAG.
-        :param display_graph: DEPRECATED. Whether we want to display the graph being computed.
+        :param display_graph: Removed in 2.0: passing True raises a DeprecationError.
+            Call `visualize_execution()` to display the graph instead.
         :param inputs: Runtime inputs to the DAG.
         :return: an object consisting of the variables requested, matching the type returned by the GraphAdapter.
             See constructor for how the GraphAdapter is initialized. The default one right now returns a pandas
             dataframe.
         """
         if display_graph:
-            warnings.warn(
-                "display_graph=True is deprecated. It will be removed in the 2.0.0 release. "
-                "Please use visualize_execution().",
-                DeprecationWarning,
-                stacklevel=2,
+            raise deprecation.removed_in_2_0(
+                "display_graph=True",
+                explanation="Executing no longer displays the graph.",
+                use_this="visualize_execution()",
+                section="display_graph",
             )
         run_id = str(uuid.uuid4())
         run_successful = True
@@ -567,9 +567,7 @@ class Driver:
                 overrides=overrides,
             )
         try:
-            outputs = self.__raw_execute(
-                _final_vars, overrides, display_graph, inputs=inputs, _run_id=run_id
-            )
+            outputs = self.__raw_execute(_final_vars, overrides, inputs=inputs, _run_id=run_id)
             if self.adapter.does_method("do_build_result", is_async=False):
                 # Build the result if we have a result builder
                 outputs = self.adapter.call_lifecycle_method_sync(
@@ -603,96 +601,21 @@ class Driver:
         _final_vars = common.convert_output_values(final_vars, _module_set)
         return _final_vars
 
-    @deprecation.deprecated(
-        warn_starting=(1, 0, 0),
-        fail_starting=(2, 0, 0),
-        use_this=None,
-        explanation="This has become a private method and does not guarantee that all the adapters work correctly.",
-        migration_guide="Don't use this entry point for execution directly. Always go through `.execute()`or `.materialize()`.",
-    )
-    def raw_execute(
-        self,
-        final_vars: list[str],
-        overrides: dict[str, Any] = None,
-        display_graph: bool = False,
-        inputs: dict[str, Any] = None,
-        _fn_graph: graph.FunctionGraph = None,
-    ) -> dict[str, Any]:
-        """Raw execute function that does the meat of execute.
-
-        Don't use this entry point for execution directly. Always go through `.execute()` or `.materialize()`.
-        In case you are using `.raw_execute()` directly, please switch to `.execute()` using a
-        `base.DictResult()`. Note: `base.DictResult()` is the default return of execute if you are
-        using the `driver.Builder()` class to create a `Driver()` object.
-
-        :param final_vars: Final variables to compute
-        :param overrides: Overrides to run.
-        :param display_graph: DEPRECATED. DO NOT USE. Whether or not to display the graph when running it
-        :param inputs: Runtime inputs to the DAG
-        :return:
-        """
-        function_graph = _fn_graph if _fn_graph is not None else self.graph
-        run_id = str(uuid.uuid4())
-        nodes, user_nodes = function_graph.get_upstream_nodes(final_vars, inputs, overrides)
-        Driver.validate_inputs(
-            function_graph, self.adapter, user_nodes, inputs, nodes
-        )  # TODO -- validate within the function graph itself
-        if display_graph:  # deprecated flow.
-            warnings.warn(
-                "display_graph=True is deprecated. It will be removed in the 2.0.0 release. "
-                "Please use visualize_execution().",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            self.visualize_execution(final_vars, "test-output/execute.gv", {"view": True})
-            if self.has_cycles(
-                final_vars, function_graph
-            ):  # here for backwards compatible driver behavior.
-                raise ValueError("Error: cycles detected in your graph.")
-        all_nodes = nodes | user_nodes
-        self.graph_executor.validate(list(all_nodes))
-        if self.adapter.does_hook("pre_graph_execute", is_async=False):
-            self.adapter.call_all_lifecycle_hooks_sync(
-                "pre_graph_execute",
-                run_id=run_id,
-                graph=function_graph,
-                final_vars=final_vars,
-                inputs=inputs,
-                overrides=overrides,
-            )
-        results = None
-        error = None
-        success = False
-        try:
-            results = self.graph_executor.execute(
-                function_graph,
-                final_vars,
-                overrides if overrides is not None else {},
-                inputs if inputs is not None else {},
-                run_id,
-            )
-            success = True
-        except Exception as e:
-            error = e
-            success = False
-            raise e
-        finally:
-            if self.adapter.does_hook("post_graph_execute", is_async=False):
-                self.adapter.call_all_lifecycle_hooks_sync(
-                    "post_graph_execute",
-                    run_id=run_id,
-                    graph=function_graph,
-                    success=success,
-                    error=error,
-                    results=results,
-                )
-        return results
+    def raw_execute(self, *args: Any, **kwargs: Any) -> typing.NoReturn:
+        """Removed in 2.0: raises a DeprecationError. Call `.execute()` or `.materialize()` instead."""
+        raise deprecation.removed_in_2_0(
+            "Driver.raw_execute",
+            explanation="It returned the outputs without building the result, so it did not work "
+            "with every adapter. Build the Driver with `base.DictResult()` to get the same dict "
+            "from `.execute()`.",
+            use_this="Driver.execute",
+            section="Driver.raw_execute",
+        )
 
     def __raw_execute(
         self,
         final_vars: list[str],
         overrides: dict[str, Any] = None,
-        display_graph: bool = False,
         inputs: dict[str, Any] = None,
         _fn_graph: graph.FunctionGraph = None,
         _run_id: str = None,
@@ -703,7 +626,6 @@ class Driver:
 
         :param final_vars: Final variables to compute
         :param overrides: Overrides to run.
-        :param display_graph: DEPRECATED. DO NOT USE. Whether or not to display the graph when running it
         :param inputs: Runtime inputs to the DAG
         :return:
         """
@@ -713,18 +635,6 @@ class Driver:
         Driver.validate_inputs(
             function_graph, self.adapter, user_nodes, inputs, nodes
         )  # TODO -- validate within the function graph itself
-        if display_graph:  # deprecated flow.
-            warnings.warn(
-                "display_graph=True is deprecated. It will be removed in the 2.0.0 release. "
-                "Please use visualize_execution().",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            self.visualize_execution(final_vars, "test-output/execute.gv", {"view": True})
-            if self.has_cycles(
-                final_vars, function_graph
-            ):  # here for backwards compatible driver behavior.
-                raise ValueError("Error: cycles detected in your graph.")
         all_nodes = nodes | user_nodes
         self.graph_executor.validate(list(all_nodes))
         results = None
@@ -2141,6 +2051,5 @@ if __name__ == "__main__":
     df = dr.execute(
         ["date_index", "some_column"],
         # ,overrides={'DATE': pd.Series(0)}
-        display_graph=False,
     )
     print(df)

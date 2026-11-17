@@ -58,7 +58,7 @@ TL;DR
       - Nodes and dataflow versions are derived from code.
       - `Asset code version <https://docs.dagster.io/concepts/assets/software-defined-assets#asset-code-versions>`_ is specified manually.
     * - Versioning data
-      - Automated code version + data value are used to read from cache or compute new results with `DiskCacheAdapter <https://docs.dagster.io/concepts/assets/software-defined-assets#asset-code-versions>`_
+      - Automated code version + data value are used to read from cache or compute new results with `caching <https://hamilton.apache.org/concepts/caching/>`_
       - Manual asset code version + upstream changes are used to `trigger re-materialization <https://docs.dagster.io/concepts/assets/software-defined-assets#asset-code-versions>`_
     * - In-memory Execution
       - Default

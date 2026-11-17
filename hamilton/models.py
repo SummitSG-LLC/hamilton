@@ -27,9 +27,8 @@ class DynamicTransformBase(abc.ABC):
     1. The nodes that they depend on
     2. What the transform does
 
-    Paired with the decorator @dynamic_transform(CLS, config_item, **extra_params) one can write incredibly powerful
-    DAGs that depend on dynamic transform configs. That decorator, and @model with it, is deprecated: it warns from
-    1.20.0 and fails from 2.0.0. Use @resolve instead.
+    The decorators that used it, @dynamic_transform and @model, were removed in Hamilton 2.0: using one raises a
+    DeprecationError. Use @resolve instead.
     """
 
     def __init__(self, config_parameters: Any, name: str):
@@ -61,9 +60,7 @@ class DynamicTransformBase(abc.ABC):
         return self._name
 
 
-# Maintained for backwards compatibility
-# Will likely keep this in some way, but might change the name or the approach
-# with the 2.0 release
+# Kept for code that subclasses it, though @model, which used it, was removed.
 class BaseModel(DynamicTransformBase, abc.ABC):
     """Base classes for models in hamilton
     We define a model as anything whose inputs are configuration-driven.
@@ -75,7 +72,7 @@ class BaseModel(DynamicTransformBase, abc.ABC):
 
     Note that the model-training is not yet in scope.
 
-    @model is deprecated: it warns from 1.20.0 and fails from 2.0.0. Use @resolve instead."""
+    @model was removed in Hamilton 2.0: using it raises a DeprecationError. Use @resolve instead."""
 
     def compute(self, **inputs: Any) -> Any:
         """Delegates to predict function to compute this model's return.

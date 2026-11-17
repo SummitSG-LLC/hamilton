@@ -28,8 +28,8 @@ import inspect
 import logging
 import os.path
 import pathlib
+import typing
 import uuid
-import warnings
 from collections.abc import Callable, Collection
 from enum import Enum
 from types import ModuleType
@@ -37,6 +37,7 @@ from typing import Any, Optional
 
 import hamilton.lifecycle.base as lifecycle_base
 from hamilton import graph_types, node
+from hamilton.dev_utils import deprecation
 from hamilton.execution import graph_functions
 from hamilton.function_modifiers import base as fm_base
 from hamilton.function_modifiers.metadata import schema
@@ -996,16 +997,14 @@ class FunctionGraph:
                 pathlib.Path(output_file_path).write_bytes(dot.pipe(**kwargs))
         return dot
 
-    def get_impacted_nodes(self, var_changes: list[str]) -> set[node.Node]:
-        """Deprecated alias for `get_downstream_nodes`."""
-        warnings.warn(
-            "FunctionGraph.get_impacted_nodes is deprecated. "
-            "Use `get_downstream_nodes` instead. This function will be removed "
-            "in the 2.0.0 release.",
-            DeprecationWarning,
-            stacklevel=2,
+    def get_impacted_nodes(self, *args: Any, **kwargs: Any) -> typing.NoReturn:
+        """Removed in 2.0: raises a DeprecationError. Use `get_downstream_nodes` instead."""
+        raise deprecation.removed_in_2_0(
+            "FunctionGraph.get_impacted_nodes",
+            explanation="It was another name for get_downstream_nodes, which takes the same arguments.",
+            use_this="FunctionGraph.get_downstream_nodes",
+            section="FunctionGraph.get_impacted_nodes",
         )
-        return self.get_downstream_nodes(var_changes)
 
     def get_downstream_nodes(self, var_changes: list[str]) -> set[node.Node]:
         """Given our function graph, and a list of nodes that are changed,

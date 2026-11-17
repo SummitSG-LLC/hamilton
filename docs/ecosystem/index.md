@@ -138,7 +138,6 @@ Persist and cache your data:
 
 | Integration | Description | Documentation |
 |------------|-------------|---------------|
-| <img src="../_static/logos/diskcache.png" width="20" height="20" style="vertical-align: middle;"> **DiskCache** | Disk-based caching | [Examples](https://github.com/apache/hamilton/tree/main/examples/caching_nodes/diskcache_adapter) |
 | **File-based caching** | Local file caching | [Caching Guide](../reference/caching/index.rst) |
 
 ### Other Utilities

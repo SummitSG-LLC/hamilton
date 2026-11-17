@@ -16,7 +16,6 @@ Reference
    HamiltonGraphAdapter
    AsyncGraphAdapter
    ThreadPoolFutureAdapter
-   CachingGraphAdapter
    DaskGraphAdapter
    PySparkUDFGraphAdapter
    RayGraphAdapter

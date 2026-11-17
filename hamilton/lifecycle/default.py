@@ -17,24 +17,18 @@
 
 """A selection of default lifeycle hooks/methods that come with Hamilton. These carry no additional requirements"""
 
-import hashlib
 import logging
 import pdb
-import pickle
 import pprint
 import random
-import shelve
 import time
-import warnings
 from collections.abc import Callable
-from functools import partial
 from typing import Any, Union
 
-from hamilton import graph_types, htypes
-from hamilton.graph_types import HamiltonGraph
+from hamilton import htypes
+from hamilton.dev_utils import deprecation
 from hamilton.lifecycle import (
     EdgeConnectionHook,
-    GraphExecutionHook,
     NodeExecutionHook,
     NodeExecutionMethod,
 )
@@ -336,119 +330,16 @@ class PDBDebugger(NodeExecutionHook, NodeExecutionMethod):
             pdb.set_trace()
 
 
-class CacheAdapter(NodeExecutionHook, NodeExecutionMethod, GraphExecutionHook):
-    """Class to cache node results on disk with a key based on the node code implementation and inputs.
-    Following runs with the same key can load node results and skip computation.
+class CacheAdapter:
+    """Removed in 2.0: constructing it raises a DeprecationError. Use ``Builder.with_cache()`` instead."""
 
-    The cache `_nodes_history` entry returns an append-only list of results added to the cache.
-    e.g., the last value in the list `cache["_node_history"][node_name]` is the most recent cached node.
-
-    Notes:
-        - It uses the stdlib `shelve` module and the pickle format, which makes results dependent
-        on the Python version. Use materialization for persistent results
-        - There are no utility to manage cache size so you'll have to delete it periodically. Look
-        at the diskcache plugin for Hamilton `hamilton.plugins.h_diskcache` for better cache management.
-    """
-
-    nodes_history_key: str = "_nodes_history"
-
-    def __init__(self, cache_vars: list[str] | None = None, cache_path: str = "./hamilton-cache"):
-        """Initialize the cache
-
-        :param cache_vars: List of nodes for which to store/load results. Passing None will use the cache
-        for all nodes. Default is None.
-        :param cache_path: File path to the cache. The file name doesn't need an extension.
-        """
-        self.cache_vars = cache_vars or []
-        self.cache_path = cache_path
-        self.cache = shelve.open(self.cache_path)
-        self.nodes_history: dict[str, list[str]] = self.cache.get(
-            key=CacheAdapter.nodes_history_key, default=dict()
+    def __init__(self, *args: Any, **kwargs: Any):
+        raise deprecation.removed_in_2_0(
+            "hamilton.lifecycle.default.CacheAdapter",
+            explanation="The caching built into the Driver replaces it, though not one-to-one.",
+            use_this="Builder.with_cache()",
+            section="CacheAdapter",
         )
-        self.used_nodes_hash: dict[str, str] = dict()
-        self.cache.close()
-
-        warnings.warn(
-            "The `CacheAdapter` is deprecated and will be removed in Hamilton 2.0. "
-            "Consider enabling the core caching feature via `Builder.with_cache()`. "
-            "This might not be 1-to-1 replacement, so please reach out if there are missing features. "
-            "See https://hamilton.apache.org/concepts/caching/ to learn more.",
-            FutureWarning,
-            stacklevel=2,
-        )
-
-    def run_before_graph_execution(self, *, graph: HamiltonGraph, **kwargs):
-        """Set `cache_vars` to all nodes if received None during `__init__`"""
-        self.cache = shelve.open(self.cache_path)
-        if len(self.cache_vars) == 0:
-            self.cache_vars = [n.name for n in graph.nodes]
-
-    def run_to_execute_node(
-        self, *, node_name: str, node_callable: Any, node_kwargs: dict[str, Any], **kwargs
-    ):
-        """Create cache key based on node callable hash (equiv. to HamiltonNode.version) and
-        the node inputs (`node_kwargs`).If key in cache (cache hit), load result; else (cache miss),
-        compute the node and append node name to `used_nodes_hash`.
-
-        Note:
-            - the callable hash is stored  in `used_nodes_hash` because it's required to create the
-            key in `run_after_node_execution` and the callable won't be accessible to recompute it
-        """
-        if node_name not in self.cache_vars:
-            return node_callable(**node_kwargs)
-
-        source_of_node_callable = node_callable
-        while isinstance(source_of_node_callable, partial):  # handle partials
-            source_of_node_callable = source_of_node_callable.func
-        node_hash = graph_types.hash_source_code(source_of_node_callable, strip=True)
-        cache_key = CacheAdapter.create_key(node_hash, node_kwargs)
-
-        from_cache = self.cache.get(cache_key, None)
-        if from_cache is not None:
-            return from_cache
-
-        self.used_nodes_hash[node_name] = node_hash
-        self.nodes_history[node_name] = self.nodes_history.get(node_name, []) + [node_hash]
-        return node_callable(**node_kwargs)
-
-    def run_after_node_execution(
-        self, *, node_name: str, node_kwargs: dict[str, Any], result: Any, **kwargs
-    ):
-        """If `run_to_execute_node` was a cache miss (hash stored in `used_nodes_hash`),
-        store the computed result in cache
-        """
-        if node_name not in self.cache_vars:
-            return
-
-        node_hash = self.used_nodes_hash.get(node_name)
-        if node_hash is None:
-            return
-
-        cache_key = CacheAdapter.create_key(node_hash, node_kwargs)
-        self.cache[cache_key] = result
-
-    def run_after_graph_execution(self, *args, **kwargs):
-        """After completing execution, overwrite nodes_history_key in cache and close"""
-        # TODO updating `nodes_history` at graph completion instead of after node execution
-        # means a desync is possible if the graph fails. Could lead to missing keys in
-        # `nodes_history`
-        self.cache[CacheAdapter.nodes_history_key] = self.nodes_history
-        self.cache.close()
-
-    def run_before_node_execution(self, *args, **kwargs):
-        """Placeholder required to subclass `NodeExecutionMethod`"""
-        pass
-
-    @staticmethod
-    def create_key(node_hash: str, node_inputs: dict[str, Any]) -> str:
-        """Pickle objects into bytes then get their hash value"""
-        digest = hashlib.sha256()
-        digest.update(node_hash.encode())
-
-        for ins in node_inputs.values():
-            digest.update(pickle.dumps(ins))
-
-        return digest.hexdigest()
 
 
 def wait_random(mean: float, stddev: float):

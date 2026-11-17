@@ -2,7 +2,7 @@ Kind: shaped
 Type: chore
 Status: open
 Depends on: 01
-Claimed by:
+Claimed by: agent ticket-04, dispatched 2026-11-17
 
 # Set the version to `2.0.0.dev0`, honor the removals 1.x promised, and start the migration document
 

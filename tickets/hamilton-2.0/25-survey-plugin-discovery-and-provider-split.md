@@ -1,7 +1,7 @@
 Kind: question
 Status: open
 Depends on: 01
-Claimed by:
+Claimed by: agent ticket-25, dispatched 2026-11-17
 
 # Survey: how should Hamilton discover its plugins, and which integrations earn their own distribution?
 

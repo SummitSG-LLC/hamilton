@@ -2,7 +2,7 @@ Kind: shaped
 Type: docs
 Status: open
 Depends on: 01
-Claimed by:
+Claimed by: agent ticket-02, dispatched 2026-11-17
 
 # Write the roadmap skill for 2.0 work and point `AGENTS.md` to it
 

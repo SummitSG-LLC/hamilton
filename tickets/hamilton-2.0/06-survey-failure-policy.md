@@ -1,7 +1,7 @@
 Kind: question
 Status: open
 Depends on: 01
-Claimed by:
+Claimed by: agent ticket-06, dispatched 2026-11-17
 
 # Survey: which failure policy should Hamilton 2.0 have?
 

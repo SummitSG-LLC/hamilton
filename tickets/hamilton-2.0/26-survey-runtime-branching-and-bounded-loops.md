@@ -1,7 +1,7 @@
 Kind: question
 Status: open
 Depends on: 01
-Claimed by:
+Claimed by: agent ticket-26, dispatched 2026-11-17
 
 # Survey: do runtime branching and bounded loops fit Hamilton, or do they stay with Apache Burr?
 

@@ -2,7 +2,7 @@ Kind: shaped
 Type: chore
 Status: open
 Depends on: 01
-Claimed by:
+Claimed by: agent ticket-03, dispatched 2026-11-17
 
 # Build the benchmark harness and record reference results for the 1.x paths
 

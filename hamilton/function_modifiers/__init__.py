@@ -68,7 +68,7 @@ parameterize_extract_columns = expanders.parameterize_extract_columns
 ParameterizedExtract = expanders.ParameterizedExtract
 inject = expanders.inject
 
-# The older ones that will be deprecated
+# The older ones, removed in 2.0: using one raises a DeprecationError
 parametrized = expanders.parametrized
 parameterized_inputs = expanders.parameterized_inputs
 parametrized_input = expanders.parametrized_input
@@ -80,14 +80,14 @@ unpack_fields = expanders.unpack_fields
 
 # does decorator
 does = macros.does
-pipe = macros.pipe
+pipe = macros.pipe  # removed in 2.0: using it raises a DeprecationError
 pipe_input = macros.pipe_input
 pipe_output = macros.pipe_output
 mutate = macros.mutate
 step = macros.step
 apply_to = macros.apply_to
 
-# resolve transform/model decorator
+# dynamic_transform and model, removed in 2.0: using one raises a DeprecationError
 dynamic_transform = macros.dynamic_transform
 model = macros.model
 

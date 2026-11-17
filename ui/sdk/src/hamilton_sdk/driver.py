@@ -396,18 +396,6 @@ class Driver(driver.Driver):
         )
         return super(Driver, self).execute(final_vars, overrides, display_graph, inputs)
 
-    def raw_execute(
-        self,
-        final_vars: list[str],
-        overrides: dict[str, Any] = None,
-        display_graph: bool = False,
-        inputs: dict[str, Any] = None,
-        _fn_graph: graph.FunctionGraph = None,
-    ) -> dict[str, Any]:
-        return super(Driver, self).raw_execute(
-            final_vars, overrides, display_graph, inputs, _fn_graph
-        )
-
     def materialize(
         self,
         *materializers: materialization.MaterializerFactory,

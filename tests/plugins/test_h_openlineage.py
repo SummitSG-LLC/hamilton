@@ -25,7 +25,7 @@ import pytest
 from sqlalchemy import create_engine, text
 
 from hamilton import ad_hoc_utils, driver
-from hamilton.function_modifiers import dataloader, load_from, save_to, source, value
+from hamilton.function_modifiers import load_from, save_to, source, value
 from hamilton.io import utils
 
 pytest.importorskip("openlineage.client")
@@ -961,63 +961,6 @@ def test_polars_database_write_through_adbc_emits_no_dataset_and_says_why(
 
     assert dataset_ids(events, "outputs") == []
     assert "through ADBC" in caplog.text
-
-
-@requires_polars
-def test_pre_1_0_polars_database_asks_datasource_users_to_upgrade(tmp_path):
-    """The pre-1.0 classes keep file metadata and add a connection-less ``sql_metadata``."""
-    from hamilton.plugins import polars_pre_1_0_0_extension as pre_1_0
-
-    connection = sqlite3.connect(tmp_path / "old.db")
-    frame = pl.DataFrame({"id": [1, 2]})
-    write_metadata = pre_1_0.PolarsDatabaseWriter(
-        table_name="orders",
-        connection=f"sqlite:///{tmp_path / 'old.db'}",
-        if_table_exists="replace",
-    ).save_data(frame)
-    _, read_metadata = pre_1_0.PolarsDatabaseReader(
-        query="SELECT * FROM orders", connection=connection
-    ).load_data(pl.DataFrame)
-
-    for metadata, operation in ((write_metadata, "write"), (read_metadata, "read")):
-        assert metadata["file_metadata"]["path"] == (
-            "orders" if operation == "write" else "SELECT * FROM orders"
-        )
-        assert metadata["sql_metadata"]["source"] is None
-        assert metadata["sql_metadata"]["operation"] == operation
-        datasets = h_openlineage.sql_datasets(metadata)
-        assert datasets.inputs == [] and datasets.outputs == []
-        assert any("requires polars>=1.0" in note for note in datasets.notes)
-
-
-@requires_polars
-def test_pre_1_0_polars_database_read_logs_the_upgrade_note_through_the_adapter(tmp_path, caplog):
-    """In datasource mode the adapter emits no dataset for a pre-1.0 read and logs its note."""
-    from hamilton.plugins import polars_pre_1_0_0_extension as pre_1_0
-
-    db_path = tmp_path / "old.db"
-    pl.DataFrame({"id": [1, 2]}).write_database(
-        "orders", f"sqlite:///{db_path}", if_table_exists="replace"
-    )
-
-    @dataloader()
-    def orders() -> tuple[pl.DataFrame, dict]:
-        return pre_1_0.PolarsDatabaseReader(
-            query="SELECT * FROM orders", connection=sqlite3.connect(db_path)
-        ).load_data(pl.DataFrame)
-
-    with caplog.at_level(logging.WARNING, logger="hamilton.plugins.h_openlineage"):
-        _, events = run_with_lineage(
-            tmp_path,
-            "pre_1_0_ns",
-            {},
-            module=ad_hoc_utils.create_temporary_module(orders),
-            final_vars=("orders",),
-            sql_dataset_identity="datasource",
-        )
-
-    assert dataset_ids(events, "inputs") == []
-    assert "requires polars>=1.0" in caplog.text
 
 
 @requires_polars

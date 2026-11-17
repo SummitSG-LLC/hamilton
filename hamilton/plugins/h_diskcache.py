@@ -16,25 +16,35 @@
 # under the License.
 
 import logging
-import warnings
+import typing
 from typing import Any
 
 import diskcache
 
-from hamilton import driver, graph_types, lifecycle, node
+from hamilton import driver, graph_types, node
+from hamilton.dev_utils import deprecation
 
 logger = logging.getLogger(__name__)
 
+# The key under which the 1.x DiskCacheAdapter stored, for each node, the hashes of its versions it cached.
+NODES_HISTORY_KEY = "_nodes_history"
 
-def _bytes_to_mb(kb: int) -> float:
-    return kb / (1024**2)
+
+def _removed_disk_cache_adapter(name: str) -> deprecation.DeprecationError:
+    return deprecation.removed_in_2_0(
+        name,
+        explanation="The caching built into the Driver replaces DiskCacheAdapter, though not "
+        "one-to-one. evict_all_except still prunes a cache directory DiskCacheAdapter wrote.",
+        use_this="Builder.with_cache()",
+        section="DiskCacheAdapter",
+    )
 
 
 def evict_all_except(nodes_to_keep: dict[str, node.Node], cache: diskcache.Cache) -> int:
-    """Evicts all nodes and node version except those passed.
-    Remaining nodes may have multiple entries for different input values
+    """Evicts from a cache that the 1.x DiskCacheAdapter wrote every node version except those passed.
+    Remaining nodes may have multiple entries for different input values.
     """
-    nodes_history: dict[str, list[str]] = cache.get(key=DiskCacheAdapter.nodes_history_key)  # type: ignore
+    nodes_history: dict[str, list[str]] = cache.get(key=NODES_HISTORY_KEY)  # type: ignore
 
     new_nodes_history = dict()
     eviction_counter = 0
@@ -52,115 +62,18 @@ def evict_all_except(nodes_to_keep: dict[str, node.Node], cache: diskcache.Cache
             cache.evict(tag=f"{node_name}.{hash_to_evict}")
             eviction_counter += 1
 
-    cache.set(key=DiskCacheAdapter.nodes_history_key, value=new_nodes_history)
+    cache.set(key=NODES_HISTORY_KEY, value=new_nodes_history)
     return eviction_counter
 
 
-def evict_all_except_driver(dr: driver.Driver) -> dict:
-    """Wrap the utility `evict_all_except` to receive a driver.Driver object"""
-    cache_hooks = [
-        adapter for adapter in dr.adapter.adapters if isinstance(adapter, DiskCacheAdapter)
-    ]
-
-    if len(cache_hooks) == 0:
-        raise AssertionError("0 `h_diskcache.CacheHook` defined for this Driver")
-    elif len(cache_hooks) > 1:
-        raise AssertionError(">1 `h_diskcache.CacheHook` defined for this Driver")
-
-    cache: diskcache.Cache = cache_hooks[0].cache
-    volume_before = cache.volume()
-    eviction_counter = evict_all_except(nodes_to_keep=dr.graph.nodes, cache=cache)
-    volume_after = cache.volume()
-    volume_difference = volume_before - volume_after
-
-    logger.info(f"Evicted: {_bytes_to_mb(volume_difference):.2f} MB")
-    logger.debug(f"Evicted {eviction_counter} entries")
-    logger.debug(f"Cache size after: {_bytes_to_mb(volume_after):.2f} MB")
-
-    return dict(
-        evicted_size_mb=_bytes_to_mb(volume_difference),
-        eviction_counter=eviction_counter,
-        size_after=_bytes_to_mb(volume_after),
-    )
+def evict_all_except_driver(dr: driver.Driver) -> typing.NoReturn:
+    """Removed in 2.0 with DiskCacheAdapter, which it needed on the Driver: raises a DeprecationError.
+    Call ``evict_all_except`` on the cache directory instead."""
+    raise _removed_disk_cache_adapter("hamilton.plugins.h_diskcache.evict_all_except_driver")
 
 
-MAX_KWARGS_REPR_LENGTH = 200
+class DiskCacheAdapter:
+    """Removed in 2.0: constructing it raises a DeprecationError. Use ``Builder.with_cache()`` instead."""
 
-
-class DiskCacheAdapter(
-    lifecycle.NodeExecutionHook,
-    lifecycle.GraphExecutionHook,
-    lifecycle.NodeExecutionMethod,
-):
-    nodes_history_key: str = "_nodes_history"
-
-    def __init__(
-        self, cache_vars: list[str] | None = None, cache_path: str = ".", **cache_settings
-    ):
-        self.cache_vars = cache_vars or []
-        self.cache_path = cache_path
-        self.cache = diskcache.Cache(directory=cache_path, **cache_settings)
-        self.nodes_history: dict[str, list[str]] = self.cache.get(
-            key=DiskCacheAdapter.nodes_history_key, default=dict()
-        )  # type: ignore
-        self.used_nodes_hash: dict[str, str] = dict()
-
-        warnings.warn(
-            "The `DiskCacheAdapter` is deprecated and will be removed in Hamilton 2.0. "
-            "Consider enabling the core caching feature via `Builder.with_cache()`. "
-            "This might not be 1-to-1 replacement, so please reach out if there are missing features. "
-            "See https://hamilton.apache.org/concepts/caching/ to learn more.",
-            FutureWarning,
-            stacklevel=2,
-        )
-
-    def run_before_graph_execution(self, *, graph: graph_types.HamiltonGraph, **kwargs):
-        """Set cache_vars to all nodes if not specified"""
-        if self.cache_vars == []:
-            self.cache_vars = [n.name for n in graph.nodes]
-
-    def run_to_execute_node(
-        self, *, node_name: str, node_callable: Any, node_kwargs: dict[str, Any], **kwargs
-    ):
-        """Create hash key then use cached value if exist"""
-        if node_name not in self.cache_vars:
-            return node_callable(**node_kwargs)
-
-        node_hash = graph_types.hash_source_code(node_callable, strip=True)
-        self.used_nodes_hash[node_name] = node_hash
-        cache_key = (node_hash, *node_kwargs.values())
-
-        from_cache = self.cache.get(key=cache_key, default=None)
-        if from_cache is not None:
-            if logger.isEnabledFor(logging.DEBUG):
-                node_kwargs_string = repr(node_kwargs)
-                if len(node_kwargs_string) > MAX_KWARGS_REPR_LENGTH:  # limit size of log
-                    node_kwargs_string = node_kwargs_string[0:MAX_KWARGS_REPR_LENGTH] + "..."
-                logger.debug(f"{node_name} {node_kwargs_string}: from cache")
-            return from_cache
-
-        if logger.isEnabledFor(logging.DEBUG):
-            node_kwargs_string = repr(node_kwargs)
-            if len(node_kwargs_string) > MAX_KWARGS_REPR_LENGTH:  # limit size of log
-                node_kwargs_string = node_kwargs_string[0:MAX_KWARGS_REPR_LENGTH] + "..."
-            logger.debug(f"{node_name} {node_kwargs_string}: executed")
-        self.nodes_history[node_name] = self.nodes_history.get(node_name, []) + [node_hash]
-        return node_callable(**node_kwargs)
-
-    def run_after_node_execution(self, *, node_name: str, node_kwargs: dict, result: Any, **kwargs):
-        if node_name not in self.cache_vars:
-            return
-
-        node_hash = self.used_nodes_hash[node_name]
-        cache_key = (node_hash, *node_kwargs.values())
-        cache_tag = f"{node_name}.{node_hash}"
-        # only adds if key doesn't exist
-        self.cache.add(key=cache_key, value=result, tag=cache_tag)
-
-    def run_after_graph_execution(self, *args, **kwargs):
-        self.cache.set(key=DiskCacheAdapter.nodes_history_key, value=self.nodes_history)
-        logger.info(f"Cache size: {_bytes_to_mb(self.cache.volume()):.2f} MB")
-        self.cache.close()
-
-    def run_before_node_execution(self, *args, **kwargs):
-        pass
+    def __init__(self, *args: Any, **kwargs: Any):
+        raise _removed_disk_cache_adapter("hamilton.plugins.h_diskcache.DiskCacheAdapter")

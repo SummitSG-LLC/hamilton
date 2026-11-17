@@ -58,6 +58,64 @@ class DeprecationError(Exception):
         raise self
 
 
+# The guide holding the migration instructions for each API that 1.x deprecated and 2.0 removed. Errors name it by
+# its path in the Apache Hamilton repository, which is right before the page is published and after.
+MIGRATION_TO_2_0 = "docs/migration-to-2.0.md"
+_TWO_ZERO = Version(2, 0, 0)
+
+
+def migration_to_2_0(section: str) -> str:
+    """The ``migration_guide`` of an API that 2.0 removed: the section of "Migration to 2.0" that covers it.
+
+    :param section: the heading of the section, without Markdown markup.
+    """
+    return f'the section "{section}" of "Migration to 2.0" ({MIGRATION_TO_2_0} in the Apache Hamilton repository)'
+
+
+def _compose_message(
+    lead: str, explanation: str, use_this: str | None, migration_guide: str | None
+) -> str:
+    parts = [lead, explanation]
+    if use_this is not None:
+        parts.append(f"Instead, you should be using: {use_this}.")
+    if migration_guide is not None:
+        parts.append(f"For migration, see: {migration_guide}.")
+    else:
+        parts.append("This is a drop-in replacement.")
+    return " ".join(parts)
+
+
+def removed_in_2_0_message(
+    name: str, *, explanation: str, use_this: str | None, section: str
+) -> str:
+    """The message of the error for an API that 1.x deprecated and 2.0 removed.
+
+    :param name: the removed API, as the user wrote it.
+    :param explanation: why it was removed.
+    :param use_this: what to use instead, or None when nothing replaces it.
+    :param section: the heading of its section in "Migration to 2.0", without Markdown markup.
+    """
+    return _compose_message(
+        f"{name} has been removed, as of hamilton version: {_TWO_ZERO}.",
+        explanation,
+        use_this,
+        migration_to_2_0(section),
+    )
+
+
+def removed_in_2_0(
+    name: str, *, explanation: str, use_this: str | None, section: str
+) -> DeprecationError:
+    """The error for an API that 1.x deprecated and 2.0 removed, where ``@deprecated`` cannot wrap it: a module
+    attribute, a constructor or a parameter value. Raise what it returns, so the traceback ends at the caller.
+    A removed module raises an ImportError with ``removed_in_2_0_message`` instead. The parameters are those of
+    ``removed_in_2_0_message``.
+    """
+    return DeprecationError(
+        removed_in_2_0_message(name, explanation=explanation, use_this=use_this, section=section)
+    )
+
+
 def _warn_of_deprecation(message: str) -> None:
     """Default ``warn_action``; see the ``deprecated`` docstring."""
     # stacklevel=4 attributes the warning to the code that called the deprecated API. Between it and
@@ -89,7 +147,7 @@ class deprecated:
         fail_starting=(2,0,0),
         use_this=parameterize_values,
         explanation="We have redefined the parameterization decorators to consist of `parametrize`, `parametrize_inputs`, and `parametrize_values`",
-        migration_guide="https://github.com/apache/hamilton/...",
+        migration_guide=migration_to_2_0("parametrized, parametrized_input and parameterized_inputs"),
     )
     class parameterized(...):
        ...
@@ -166,14 +224,8 @@ class deprecated:
             )
 
     def _message(self, lead: str) -> str:
-        parts = [lead, self.explanation]
-        if self.use_this is not None:
-            parts.append(f"Instead, you should be using: {self.use_this.__qualname__}.")
-        if self.migration_guide is not None:
-            parts.append(f"For migration, see: {self.migration_guide}.")
-        else:
-            parts.append("This is a drop-in replacement.")
-        return " ".join(parts)
+        use_this = self.use_this.__qualname__ if self.use_this is not None else None
+        return _compose_message(lead, self.explanation, use_this, self.migration_guide)
 
     def _should_warn(self) -> bool:
         return self.current_version >= self.warn_starting

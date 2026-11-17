@@ -19,18 +19,14 @@ from __future__ import annotations
 
 import inspect
 import logging
-import typing
 from collections import Counter, defaultdict
 from collections.abc import Callable, Collection
 from typing import Any, Union
 
-import pandas as pd
-
-from hamilton import models, node
-from hamilton.dev_utils.deprecation import deprecated
+from hamilton import node
+from hamilton.dev_utils.deprecation import DeprecationError, removed_in_2_0
 from hamilton.function_modifiers import base
 from hamilton.function_modifiers.configuration import ConfigResolver, hamilton_exclude
-from hamilton.function_modifiers.delayed import resolve as delayed_resolve
 from hamilton.function_modifiers.dependencies import (
     LiteralDependency,
     SingleDependency,
@@ -252,89 +248,28 @@ def get_default_tags(fn: Callable) -> dict[str, str]:
     return {"module": module_name}
 
 
-@deprecated(
-    warn_starting=(1, 20, 0),
-    fail_starting=(2, 0, 0),
-    use_this=delayed_resolve,
-    explanation="dynamic_transform has been replaced with @resolve -- a cleaner way "
-    "to utilize config for resolving decorators. Note this allows you to use any "
-    "existing decorators.",
-    migration_guide="https://hamilton.apache.org/reference/decorators/resolve/",
-)
-class dynamic_transform(base.NodeCreator):
-    def __init__(
-        self,
-        transform_cls: type[models.BaseModel],
-        config_param: str,
-        **extra_transform_params,
-    ):
-        """Constructs a model. Takes in a model_cls, which has to have a parameter."""
-        self.transform_cls = transform_cls
-        self.config_param = config_param
-        self.extra_transform_params = extra_transform_params
-
-    def validate(self, fn: Callable):
-        """Validates that the model works with the function -- ensures:
-        1. function has no code
-        2. function has no parameters
-        3. function has series as a return type
-        :param fn: Function to validate
-        :raises InvalidDecoratorException if the model is not valid.
-        """
-
-        ensure_function_empty(fn)  # it has to look exactly
-        signature = inspect.signature(fn)
-        if not issubclass(typing.get_type_hints(fn).get("return"), pd.Series):
-            raise base.InvalidDecoratorException(
-                "Models must declare their return type as a pandas Series"
-            )
-        if len(signature.parameters) > 0:
-            raise base.InvalidDecoratorException(
-                "Models must have no parameters -- all are passed in through the config"
-            )
-
-    def generate_nodes(self, fn: Callable, config: dict[str, Any] = None) -> list[node.Node]:
-        if self.config_param not in config:
-            raise base.InvalidDecoratorException(
-                f"Configuration has no parameter: {self.config_param}. Did you define it? If so did you spell it right?"
-            )
-        fn_name = fn.__name__
-        transform = self.transform_cls(
-            config[self.config_param], fn_name, **self.extra_transform_params
-        )
-        return [
-            node.Node(
-                name=fn_name,
-                typ=typing.get_type_hints(fn).get("return"),
-                doc_string=fn.__doc__,
-                callabl=transform.compute,
-                input_types={dep: pd.Series for dep in transform.get_dependents()},
-                tags=get_default_tags(fn),
-            )
-        ]
-
-    def require_config(self) -> list[str]:
-        """Returns the configuration parameters that this model requires
-
-        :return: Just the one config param used by this model
-        """
-        return [self.config_param]
+def _removed_dynamic_transform(name: str) -> DeprecationError:
+    return removed_in_2_0(
+        name,
+        explanation="@resolve replaces it: it chooses any decorator from the config, "
+        "where this one could only apply a transform class.",
+        use_this="@resolve",
+        section="dynamic_transform and model",
+    )
 
 
-@deprecated(
-    warn_starting=(1, 20, 0),
-    fail_starting=(2, 0, 0),
-    use_this=delayed_resolve,
-    explanation="model is dynamic_transform under another name, so @resolve replaces it too.",
-    migration_guide="https://hamilton.apache.org/reference/decorators/resolve/",
-)
-class model(dynamic_transform):
-    """Model, same as a dynamic transform"""
+class dynamic_transform:
+    """Removed in 2.0: using it raises a DeprecationError. Use ``@resolve`` instead."""
 
-    def __init__(self, model_cls, config_param: str, **extra_model_params):
-        super(model, self).__init__(
-            transform_cls=model_cls, config_param=config_param, **extra_model_params
-        )
+    def __init__(self, *args: Any, **kwargs: Any):
+        raise _removed_dynamic_transform("@dynamic_transform")
+
+
+class model:
+    """Removed in 2.0: using it raises a DeprecationError. Use ``@resolve`` instead."""
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        raise _removed_dynamic_transform("@model")
 
 
 NamespaceType = Union[str, EllipsisType, None]
@@ -1088,33 +1023,19 @@ class pipe_input(base.NodeInjector):
         return out
 
 
-@deprecated(
-    warn_starting=(1, 20, 0),
-    fail_starting=(2, 0, 0),
-    use_this=pipe_input,
-    explanation="pipe has been replaced with pipe_input -- a clearer name since "
-    "we also added pipe_output with complementary functionality.",
-    migration_guide="https://hamilton.apache.org/reference/decorators/pipe/",
-)
-class pipe(pipe_input):
-    def __init__(
-        self,
-        *transforms: Applicable,
-        namespace: NamespaceType = ...,
-        on_input: base.TargetType = None,
-        collapse=False,
-        _chain=False,
-    ):
-        super(pipe, self).__init__(
-            *transforms,
-            namespace=namespace,
-            on_input=on_input,
-            collapse=collapse,
-            _chain=_chain,
+class pipe:
+    """Removed in 2.0: using it raises a DeprecationError. Use ``@pipe_input`` instead."""
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        raise removed_in_2_0(
+            "@pipe",
+            explanation="@pipe_input is the same decorator under a clearer name, beside its "
+            "counterpart @pipe_output.",
+            use_this="@pipe_input",
+            section="pipe",
         )
 
 
-# # TODO -- implement flow!
 # class flow(pipe):
 #     """flow() is a more flexible, power-user version of `pipe`. The rules are largely similar, with a few key differences:
 #

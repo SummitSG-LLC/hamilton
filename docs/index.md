@@ -37,6 +37,7 @@ hamilton-ui/index
 hamilton-vscode/index
 integrations/index
 code-comparisons/index
+migration-to-2.0
 ```
 
 ```{toctree}

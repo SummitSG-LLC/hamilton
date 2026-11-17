@@ -15,15 +15,16 @@
 # specific language governing permissions and limitations
 # under the License.
 
-import warnings
+"""Removed in 2.0: importing this module raises an ImportError that says what to use instead."""
 
-import hamilton.async_driver
+from hamilton.dev_utils import deprecation
 
-warnings.warn(
-    "This module is deprecated and will be removed in Hamilton 2.0. "
-    "Please use `hamilton.async_driver` instead. ",
-    FutureWarning,
-    stacklevel=2,
+raise ImportError(
+    deprecation.removed_in_2_0_message(
+        "hamilton.experimental.h_async",
+        explanation="Async support left experimental; hamilton.async_driver holds the same AsyncDriver.",
+        use_this="hamilton.async_driver",
+        section="hamilton.experimental.h_async",
+    ),
+    name=__name__,
 )
-
-AsyncDriver = hamilton.async_driver.AsyncDriver

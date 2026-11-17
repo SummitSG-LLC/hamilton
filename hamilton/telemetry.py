@@ -18,33 +18,30 @@
 """
 Telemetry has been removed from Hamilton.
 
-This module is kept as a no-op stub for backwards compatibility,
-so that any user code calling ``telemetry.disable_telemetry()``
-will not break.
+The two functions of this module remain only so that a call to either says what to do. Since 2.0, both
+raise a DeprecationError: remove the call.
 """
 
-from hamilton.dev_utils.deprecation import deprecated
+import typing
+
+from hamilton.dev_utils.deprecation import DeprecationError, removed_in_2_0
 
 
-@deprecated(
-    warn_starting=(1, 89, 0),
-    fail_starting=(2, 0, 0),
-    use_this=None,
-    explanation="Telemetry has been removed from Hamilton. This function is a no-op.",
-    migration_guide="Simply remove any calls to `telemetry.disable_telemetry()`.",
-)
-def disable_telemetry():
-    """No-op. Telemetry has been removed."""
-    pass
+def _removed_telemetry_function(name: str) -> DeprecationError:
+    return removed_in_2_0(
+        name,
+        explanation="Telemetry has been removed from Hamilton, so there is nothing to switch off "
+        "or check. Remove the call.",
+        use_this=None,
+        section="Telemetry functions",
+    )
 
 
-@deprecated(
-    warn_starting=(1, 89, 0),
-    fail_starting=(2, 0, 0),
-    use_this=None,
-    explanation="Telemetry has been removed from Hamilton. This function always returns False.",
-    migration_guide="Simply remove any calls to `telemetry.is_telemetry_enabled()`.",
-)
-def is_telemetry_enabled() -> bool:
-    """Always returns False. Telemetry has been removed."""
-    return False
+def disable_telemetry() -> typing.NoReturn:
+    """Removed in 2.0: raises a DeprecationError. Telemetry has been removed; remove the call."""
+    raise _removed_telemetry_function("telemetry.disable_telemetry()")
+
+
+def is_telemetry_enabled() -> typing.NoReturn:
+    """Removed in 2.0: raises a DeprecationError. Telemetry has been removed; remove the call."""
+    raise _removed_telemetry_function("telemetry.is_telemetry_enabled()")

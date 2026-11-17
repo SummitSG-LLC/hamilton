@@ -34,8 +34,7 @@ import online_loader
 import pandas as pd
 import pydantic
 
-from hamilton import base
-from hamilton.experimental import h_async
+from hamilton import async_driver, base
 
 app = fastapi.FastAPI()
 
@@ -68,7 +67,7 @@ model_predict = fake_model_predict
 
 # We instantiate an async driver once for the life of the app. We use the AsyncDriver here because under the hood
 # FastAPI is async. If you were using Flask, you could use the regular Hamilton driver without issue.
-dr = h_async.AsyncDriver(
+dr = async_driver.AsyncDriver(
     # pass in feature client because it's invariant to each execution.
     # pass in execution mode to construct things correctly.
     {"feature_client": feature_client, "execution_mode": "online"},

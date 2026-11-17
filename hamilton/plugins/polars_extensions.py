@@ -21,6 +21,7 @@ from typing import Any
 from packaging import version
 
 from hamilton import registry
+from hamilton.dev_utils import deprecation
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +37,16 @@ except ImportError as e:
 
 pl_version = version.Version(pl.__version__)
 if pl_version < version.Version("1.0.0"):
-    from hamilton.plugins.polars_pre_1_0_0_extension import register_data_loaders
-
-    logger.warning(
-        "Using pre-1.0.0 Polars integration -- we will stop supporting this in Hamilton 2.0, so please upgrade your version of polars! "
-        f"Current version: {pl_version}, minimum required version: 1.0.0."
+    _message = deprecation.removed_in_2_0_message(
+        f"Support for polars older than 1.0.0 (you have {pl_version})",
+        explanation="Hamilton's polars integration needs polars 1.0.0 or newer.",
+        use_this="polars>=1.0.0",
+        section="Polars older than 1.0",
     )
+    # Extension autoloading skips an extension whose import fails and logs that only at debug level,
+    # so the message is logged here too, where a user with an old polars sees it.
+    logger.warning(_message)
+    raise ImportError(_message, name=__name__)
 elif pl_version < version.Version("2.0.0"):
     from hamilton.plugins.polars_post_1_0_0_extensions import register_data_loaders
 else:

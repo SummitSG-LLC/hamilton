@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-from hamilton.function_modifiers import parameterize_sources, parametrized_input
+from hamilton.function_modifiers import parameterize_sources
 
 
 def input_1() -> int:
@@ -30,14 +30,12 @@ def input_3() -> int:
     return 3
 
 
-@parametrized_input(
-    parameter="input_value_tbd",
-    variable_inputs={
-        "input_1": ("output_1", "function_with_multiple_inputs called using input_1"),
-        "input_2": ("output_2", "function_with_multiple_inputs called using input_2"),
-    },
+@parameterize_sources(
+    output_1={"input_value_tbd": "input_1"},
+    output_2={"input_value_tbd": "input_2"},
 )
 def function_with_multiple_inputs(input_value_tbd: int, static_value: int) -> int:
+    """function_with_multiple_inputs called using {input_value_tbd}"""
     return input_value_tbd + static_value
 
 

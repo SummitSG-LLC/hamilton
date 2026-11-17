@@ -1,6 +1,6 @@
-=========================
-h_async.AsyncGraphAdapter
-=========================
+==============================
+async_driver.AsyncGraphAdapter
+==============================
 
 
 .. autoclass:: hamilton.async_driver.AsyncGraphAdapter

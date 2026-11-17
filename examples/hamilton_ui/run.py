@@ -20,7 +20,7 @@ from components import feature_transforms, iris_loader, models
 
 from hamilton import driver as h_driver
 from hamilton.io.materialization import to
-from hamilton.lifecycle import PrintLnHook
+from hamilton.lifecycle import PrintLn
 from hamilton_sdk import adapters
 
 
@@ -67,7 +67,7 @@ def run(load_from_parquet: bool, username: str, project_id: int):
         h_driver.Builder()
         .with_config(config)  # this shapes the DAG
         .with_modules(iris_loader, feature_transforms, models)
-        .with_adapters(tracker, PrintLnHook(verbosity=1))
+        .with_adapters(tracker, PrintLn(verbosity=1))
         .build()
     )
     inputs = {}

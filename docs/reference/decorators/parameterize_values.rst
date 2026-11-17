@@ -34,4 +34,4 @@ tuple(Output Name, Documentation string) -> value.
 .. autoclass:: hamilton.function_modifiers.parameterize_values
    :special-members: __init__
 
-Note: this was previously called `@parametrized`.
+Note: this was previously called `@parametrized`, which Hamilton 2.0 removed; see :doc:`../../migration-to-2.0`.

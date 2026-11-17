@@ -112,7 +112,7 @@ repos:
         exclude: |
           (?x)
           ^\.github/.*\.md$|
-          ^\.claude-plugin/.*SKILL\.md$|
+          ^\.claude(-plugin)?/.*SKILL\.md$|
           ^docs/|
           ^contrib/docs/|
           ^examples/|
@@ -128,7 +128,7 @@ repos:
         files: |
           (?x)
           ^\.github/.*\.md$|
-          ^\.claude-plugin/.*SKILL\.md$
+          ^\.claude(-plugin)?/.*SKILL\.md$
         exclude: |
           (?x)
           ^\.github/ISSUE_TEMPLATE/|

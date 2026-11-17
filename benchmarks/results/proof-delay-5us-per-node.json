@@ -1,0 +1,5097 @@
+{
+  "format": "hamilton-benchmark-result/1",
+  "started_utc": "2026-11-17T09:43:14+00:00",
+  "note": "Measured on a desktop shared with six other agents running CPU-heavy work (builds, test suites) at the same time; the load average before every worker is recorded. Proof of the measure: 'delayed' is the branch point with a scratch 5-microsecond busy-wait per node execution (its diff is recorded under sides).",
+  "machine": {
+    "system": "Linux",
+    "release": "7.0.0-43-generic",
+    "architecture": "x86_64",
+    "logical_cpus": 8,
+    "usable_cpus": 8,
+    "cpu": "Intel(R) Core(TM) i7-3770 CPU @ 3.40GHz",
+    "memory_gib": 31.3
+  },
+  "harness": {
+    "commit": "df2cac2be5b2b192a8a6ee6e779b7ae9525b228d",
+    "uncommitted_changes": [],
+    "rounds": 7,
+    "settings_overridden": false,
+    "order": "scenario by scenario; within a scenario, round by round, each side once per round in a fresh worker process, the order of the sides reversed every other round"
+  },
+  "sides": [
+    {
+      "label": "branch-point",
+      "switch": "1x",
+      "checkout": {
+        "commit": "077b7a1d59cddac874f4d08c8f9fc2a6cbd610e1",
+        "uncommitted_changes": []
+      },
+      "python": {
+        "version": "3.15.0",
+        "implementation": "CPython",
+        "build": "3.15.0 (main, Oct 9 2026, 15:24:40) [Clang 22.1.3 ]",
+        "free_threaded_build": false,
+        "gil_enabled_after_imports": true,
+        "recursion_limit": 1000
+      },
+      "hamilton_version": "1.90.0",
+      "packages": {
+        "mypy_extensions": "1.2.0",
+        "numpy": "2.5.5",
+        "packaging": "26.3",
+        "pandas": "3.1.1",
+        "python-dateutil": "4.0.0",
+        "typing-inspect": "0.9.0",
+        "typing_extensions": "4.16.0",
+        "tzdata": "2026.6"
+      },
+      "environment": {
+        "HAMILTON_TELEMETRY_ENABLED": "false"
+      }
+    },
+    {
+      "label": "delayed",
+      "switch": "1x",
+      "checkout": {
+        "commit": "077b7a1d59cddac874f4d08c8f9fc2a6cbd610e1",
+        "uncommitted_changes": [
+          "M hamilton/execution/graph_functions.py"
+        ],
+        "uncommitted_diff": "diff --git a/hamilton/execution/graph_functions.py b/hamilton/execution/graph_functions.py\nindex 0fbb3cb2..a2d70a15 100644\n--- a/hamilton/execution/graph_functions.py\n+++ b/hamilton/execution/graph_functions.py\n@@ -17,6 +17,7 @@\n \n import logging\n import pprint\n+import time\n from collections import deque\n from collections.abc import Collection\n from functools import partial\n@@ -290,6 +291,10 @@ def execute_lifecycle_for_node(\n     :param __task_id: ID of the task, defaults to None if not in a task setting\n     :param ___kwargs: Keyword arguments that are being passed into the node\n     \"\"\"\n+    # SCRATCH (benchmark proof, never merged): spin 5 microseconds per node execution.\n+    spin_until = time.perf_counter() + 5e-6\n+    while time.perf_counter() < spin_until:\n+        pass\n \n     error = None\n     result = None"
+      },
+      "python": {
+        "version": "3.15.0",
+        "implementation": "CPython",
+        "build": "3.15.0 (main, Oct 9 2026, 15:24:40) [Clang 22.1.3 ]",
+        "free_threaded_build": false,
+        "gil_enabled_after_imports": true,
+        "recursion_limit": 1000
+      },
+      "hamilton_version": "1.90.0",
+      "packages": {
+        "mypy_extensions": "1.2.0",
+        "numpy": "2.5.5",
+        "packaging": "26.3",
+        "pandas": "3.1.1",
+        "python-dateutil": "4.0.0",
+        "typing-inspect": "0.9.0",
+        "typing_extensions": "4.16.0",
+        "tzdata": "2026.6"
+      },
+      "environment": {
+        "HAMILTON_TELEMETRY_ENABLED": "false"
+      }
+    }
+  ],
+  "scenarios": {
+    "import-driver": {
+      "description": "`import hamilton.driver` in a fresh interpreter per sample",
+      "fingerprint": "97912cec26c7c9039a116ef56d2e26d73100127179405b67a40e489bdf8e50b3",
+      "frozen": true,
+      "uses_hamilton": true,
+      "metrics": [
+        "wall_s",
+        "main_thread_cpu_s"
+      ],
+      "warmup": 1,
+      "samples_per_round": 4,
+      "settings": {
+        "statement": "import hamilton.driver",
+        "interpreter_flags": [
+          "-P"
+        ]
+      },
+      "sides": {
+        "branch-point": {
+          "rounds": [
+            {
+              "load_average_1m": 7.47802734375,
+              "samples": [
+                {
+                  "wall_s": 0.5682935150107369,
+                  "main_thread_cpu_s": 0.532886757
+                },
+                {
+                  "wall_s": 0.641310037986841,
+                  "main_thread_cpu_s": 0.572120357
+                },
+                {
+                  "wall_s": 0.6286986080231145,
+                  "main_thread_cpu_s": 0.591752905
+                },
+                {
+                  "wall_s": 0.6682919239974581,
+                  "main_thread_cpu_s": 0.6325268839999999
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 6.708984375,
+              "samples": [
+                {
+                  "wall_s": 0.4081695380154997,
+                  "main_thread_cpu_s": 0.406706258
+                },
+                {
+                  "wall_s": 0.4471486189868301,
+                  "main_thread_cpu_s": 0.407881168
+                },
+                {
+                  "wall_s": 0.49263476399937645,
+                  "main_thread_cpu_s": 0.438619598
+                },
+                {
+                  "wall_s": 0.5295704010059126,
+                  "main_thread_cpu_s": 0.476326957
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 6.57177734375,
+              "samples": [
+                {
+                  "wall_s": 0.4850842699815985,
+                  "main_thread_cpu_s": 0.43582312300000003
+                },
+                {
+                  "wall_s": 0.4788181280018762,
+                  "main_thread_cpu_s": 0.43728531299999995
+                },
+                {
+                  "wall_s": 0.4610840560053475,
+                  "main_thread_cpu_s": 0.420905832
+                },
+                {
+                  "wall_s": 0.45102677698014304,
+                  "main_thread_cpu_s": 0.410133173
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 6.0224609375,
+              "samples": [
+                {
+                  "wall_s": 0.5448350209917407,
+                  "main_thread_cpu_s": 0.5009983819999999
+                },
+                {
+                  "wall_s": 0.4256331520155072,
+                  "main_thread_cpu_s": 0.422342248
+                },
+                {
+                  "wall_s": 0.5401846489985473,
+                  "main_thread_cpu_s": 0.49477395799999996
+                },
+                {
+                  "wall_s": 0.45286781698814593,
+                  "main_thread_cpu_s": 0.413770326
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 5.7001953125,
+              "samples": [
+                {
+                  "wall_s": 0.44611424999311566,
+                  "main_thread_cpu_s": 0.42854207499999997
+                },
+                {
+                  "wall_s": 0.6792999869794585,
+                  "main_thread_cpu_s": 0.49688057100000005
+                },
+                {
+                  "wall_s": 0.7140685500053223,
+                  "main_thread_cpu_s": 0.647006572
+                },
+                {
+                  "wall_s": 0.8042521720053628,
+                  "main_thread_cpu_s": 0.661482157
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.34716796875,
+              "samples": [
+                {
+                  "wall_s": 1.4128940389782656,
+                  "main_thread_cpu_s": 0.6559849299999999
+                },
+                {
+                  "wall_s": 1.2732837759831455,
+                  "main_thread_cpu_s": 0.664872506
+                },
+                {
+                  "wall_s": 0.915228088008007,
+                  "main_thread_cpu_s": 0.65154998
+                },
+                {
+                  "wall_s": 0.859992665995378,
+                  "main_thread_cpu_s": 0.606637953
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.28076171875,
+              "samples": [
+                {
+                  "wall_s": 1.195782668015454,
+                  "main_thread_cpu_s": 0.661338271
+                },
+                {
+                  "wall_s": 0.8504249549878296,
+                  "main_thread_cpu_s": 0.6368587370000001
+                },
+                {
+                  "wall_s": 1.1309726699837483,
+                  "main_thread_cpu_s": 0.7030987470000001
+                },
+                {
+                  "wall_s": 0.7623105819802731,
+                  "main_thread_cpu_s": 0.6338987070000001
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.45102677698014304,
+              "noise_floor": 0.7464688287888249,
+              "round_values": [
+                0.5682935150107369,
+                0.4081695380154997,
+                0.45102677698014304,
+                0.4256331520155072,
+                0.44611424999311566,
+                0.859992665995378,
+                0.7623105819802731
+              ],
+              "n": 28,
+              "min": 0.4081695380154997,
+              "median": 0.5984960615169257,
+              "max": 1.4128940389782656
+            },
+            "main_thread_cpu_s": {
+              "value": 0.42854207499999997,
+              "noise_floor": 0.45854255967748325,
+              "round_values": [
+                0.532886757,
+                0.406706258,
+                0.410133173,
+                0.413770326,
+                0.42854207499999997,
+                0.606637953,
+                0.6338987070000001
+              ],
+              "n": 28,
+              "min": 0.406706258,
+              "median": 0.5169425695,
+              "max": 0.7030987470000001
+            }
+          }
+        },
+        "delayed": {
+          "rounds": [
+            {
+              "load_average_1m": 7.119140625,
+              "samples": [
+                {
+                  "wall_s": 0.47088286399957724,
+                  "main_thread_cpu_s": 0.43987487
+                },
+                {
+                  "wall_s": 0.5325979319750331,
+                  "main_thread_cpu_s": 0.49050095399999993
+                },
+                {
+                  "wall_s": 0.4394950389978476,
+                  "main_thread_cpu_s": 0.425233085
+                },
+                {
+                  "wall_s": 0.5312375419889577,
+                  "main_thread_cpu_s": 0.48987334600000004
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.119140625,
+              "samples": [
+                {
+                  "wall_s": 0.42598095498397015,
+                  "main_thread_cpu_s": 0.41193632599999996
+                },
+                {
+                  "wall_s": 0.512898259999929,
+                  "main_thread_cpu_s": 0.471965727
+                },
+                {
+                  "wall_s": 0.4451237030152697,
+                  "main_thread_cpu_s": 0.443125914
+                },
+                {
+                  "wall_s": 0.4073025159887038,
+                  "main_thread_cpu_s": 0.40669178699999997
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 6.28564453125,
+              "samples": [
+                {
+                  "wall_s": 0.48720341399894096,
+                  "main_thread_cpu_s": 0.484596578
+                },
+                {
+                  "wall_s": 0.5578698290046304,
+                  "main_thread_cpu_s": 0.5176223480000001
+                },
+                {
+                  "wall_s": 0.7211529019987211,
+                  "main_thread_cpu_s": 0.5607966759999999
+                },
+                {
+                  "wall_s": 0.7190051389916334,
+                  "main_thread_cpu_s": 0.575556944
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 6.0224609375,
+              "samples": [
+                {
+                  "wall_s": 0.4644469760241918,
+                  "main_thread_cpu_s": 0.42633732900000004
+                },
+                {
+                  "wall_s": 0.52774415598833,
+                  "main_thread_cpu_s": 0.483668259
+                },
+                {
+                  "wall_s": 0.5223637709859759,
+                  "main_thread_cpu_s": 0.469773315
+                },
+                {
+                  "wall_s": 0.5029115829966031,
+                  "main_thread_cpu_s": 0.449957739
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 6.365234375,
+              "samples": [
+                {
+                  "wall_s": 1.0386113849817775,
+                  "main_thread_cpu_s": 0.668988882
+                },
+                {
+                  "wall_s": 0.6038275369792245,
+                  "main_thread_cpu_s": 0.5694613319999999
+                },
+                {
+                  "wall_s": 0.7727816030092072,
+                  "main_thread_cpu_s": 0.659737533
+                },
+                {
+                  "wall_s": 0.7412574269983452,
+                  "main_thread_cpu_s": 0.64670963
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 6.65673828125,
+              "samples": [
+                {
+                  "wall_s": 0.7493835930072237,
+                  "main_thread_cpu_s": 0.665279056
+                },
+                {
+                  "wall_s": 1.0411846580100246,
+                  "main_thread_cpu_s": 0.597859924
+                },
+                {
+                  "wall_s": 0.4706596610194538,
+                  "main_thread_cpu_s": 0.42944382999999997
+                },
+                {
+                  "wall_s": 0.47598271098104306,
+                  "main_thread_cpu_s": 0.43500255
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 10.17236328125,
+              "samples": [
+                {
+                  "wall_s": 0.6412350909959059,
+                  "main_thread_cpu_s": 0.54895267
+                },
+                {
+                  "wall_s": 0.4644827480078675,
+                  "main_thread_cpu_s": 0.455883343
+                },
+                {
+                  "wall_s": 0.46291150400065817,
+                  "main_thread_cpu_s": 0.436760378
+                },
+                {
+                  "wall_s": 0.5255320110009052,
+                  "main_thread_cpu_s": 0.48283502300000003
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.4644469760241918,
+              "noise_floor": 0.10272082167374984,
+              "round_values": [
+                0.4394950389978476,
+                0.4073025159887038,
+                0.48720341399894096,
+                0.4644469760241918,
+                0.6038275369792245,
+                0.4706596610194538,
+                0.46291150400065817
+              ],
+              "n": 28,
+              "min": 0.4073025159887038,
+              "median": 0.5239478909934405,
+              "max": 1.0411846580100246
+            },
+            "main_thread_cpu_s": {
+              "value": 0.42944382999999997,
+              "noise_floor": 0.13823342857202067,
+              "round_values": [
+                0.425233085,
+                0.40669178699999997,
+                0.484596578,
+                0.42633732900000004,
+                0.5694613319999999,
+                0.42944382999999997,
+                0.436760378
+              ],
+              "n": 28,
+              "min": 0.40669178699999997,
+              "median": 0.483251641,
+              "max": 0.668988882
+            }
+          }
+        }
+      }
+    },
+    "build-1k": {
+      "description": "build a Driver from a generated layered graph of 1,000 nodes",
+      "fingerprint": "beb27b47f0b901b848ffdfe229275e3be147f4030250e7ae4ce59c6a9a5dd83f",
+      "frozen": true,
+      "uses_hamilton": true,
+      "metrics": [
+        "wall_s",
+        "main_thread_cpu_s"
+      ],
+      "warmup": 1,
+      "samples_per_round": 5,
+      "settings": {
+        "graph": {
+          "layers": 20,
+          "width": 50
+        },
+        "fixture_sha256": "98e007c786de7b88b9a25681c64b4229ff43bc746626af526f57a934cb628653",
+        "input_x": 7,
+        "outputs": "every node of the last layer",
+        "path": "default Builder"
+      },
+      "sides": {
+        "branch-point": {
+          "rounds": [
+            {
+              "load_average_1m": 10.63916015625,
+              "samples": [
+                {
+                  "wall_s": 0.07668577699223533,
+                  "main_thread_cpu_s": 0.07668098099999998
+                },
+                {
+                  "wall_s": 0.11539436201564968,
+                  "main_thread_cpu_s": 0.11500865999999998
+                },
+                {
+                  "wall_s": 0.11572254198836163,
+                  "main_thread_cpu_s": 0.11503431999999991
+                },
+                {
+                  "wall_s": 0.11675031000049785,
+                  "main_thread_cpu_s": 0.11624455600000005
+                },
+                {
+                  "wall_s": 0.11894787600613199,
+                  "main_thread_cpu_s": 0.11534717100000003
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 10.82861328125,
+              "samples": [
+                {
+                  "wall_s": 0.0770706559997052,
+                  "main_thread_cpu_s": 0.07707608099999985
+                },
+                {
+                  "wall_s": 0.11616772500565276,
+                  "main_thread_cpu_s": 0.11617202000000004
+                },
+                {
+                  "wall_s": 0.11934136098716408,
+                  "main_thread_cpu_s": 0.11927414299999994
+                },
+                {
+                  "wall_s": 0.1100862660096027,
+                  "main_thread_cpu_s": 0.10957221899999992
+                },
+                {
+                  "wall_s": 0.0743345300143119,
+                  "main_thread_cpu_s": 0.07090109600000005
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 10.44189453125,
+              "samples": [
+                {
+                  "wall_s": 0.07503531299880706,
+                  "main_thread_cpu_s": 0.07503377900000008
+                },
+                {
+                  "wall_s": 0.06935466299182735,
+                  "main_thread_cpu_s": 0.06935887299999999
+                },
+                {
+                  "wall_s": 0.08803169502061792,
+                  "main_thread_cpu_s": 0.08802386699999998
+                },
+                {
+                  "wall_s": 0.09087185902171768,
+                  "main_thread_cpu_s": 0.09072304899999994
+                },
+                {
+                  "wall_s": 0.10847036499762908,
+                  "main_thread_cpu_s": 0.10465073299999994
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.845703125,
+              "samples": [
+                {
+                  "wall_s": 0.08503795499564148,
+                  "main_thread_cpu_s": 0.08491452200000005
+                },
+                {
+                  "wall_s": 0.0798929700104054,
+                  "main_thread_cpu_s": 0.07912472000000004
+                },
+                {
+                  "wall_s": 0.0790375059877988,
+                  "main_thread_cpu_s": 0.07892794100000011
+                },
+                {
+                  "wall_s": 0.09496098200907,
+                  "main_thread_cpu_s": 0.09422840799999999
+                },
+                {
+                  "wall_s": 0.11746601099730469,
+                  "main_thread_cpu_s": 0.10021254300000004
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.845703125,
+              "samples": [
+                {
+                  "wall_s": 0.06581031100358814,
+                  "main_thread_cpu_s": 0.06580842099999995
+                },
+                {
+                  "wall_s": 0.06327472999691963,
+                  "main_thread_cpu_s": 0.06327173399999997
+                },
+                {
+                  "wall_s": 0.0639499860117212,
+                  "main_thread_cpu_s": 0.06395445899999985
+                },
+                {
+                  "wall_s": 0.06391439598519355,
+                  "main_thread_cpu_s": 0.06391825299999998
+                },
+                {
+                  "wall_s": 0.06707482499768957,
+                  "main_thread_cpu_s": 0.0670815509999998
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.61767578125,
+              "samples": [
+                {
+                  "wall_s": 0.20009544098866172,
+                  "main_thread_cpu_s": 0.11981163099999992
+                },
+                {
+                  "wall_s": 0.08315226799459197,
+                  "main_thread_cpu_s": 0.08252346100000008
+                },
+                {
+                  "wall_s": 0.07117377000395209,
+                  "main_thread_cpu_s": 0.071178572
+                },
+                {
+                  "wall_s": 0.07725930499145761,
+                  "main_thread_cpu_s": 0.0772583
+                },
+                {
+                  "wall_s": 0.06869230599841103,
+                  "main_thread_cpu_s": 0.068696235
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.61767578125,
+              "samples": [
+                {
+                  "wall_s": 0.08448549400782213,
+                  "main_thread_cpu_s": 0.08375305700000002
+                },
+                {
+                  "wall_s": 0.06662510900059715,
+                  "main_thread_cpu_s": 0.06642519400000002
+                },
+                {
+                  "wall_s": 0.06622564399731345,
+                  "main_thread_cpu_s": 0.06608876400000008
+                },
+                {
+                  "wall_s": 0.06888638497912325,
+                  "main_thread_cpu_s": 0.0685487709999999
+                },
+                {
+                  "wall_s": 0.0773409109970089,
+                  "main_thread_cpu_s": 0.07732699199999993
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.06935466299182735,
+              "noise_floor": 0.1508209043731419,
+              "round_values": [
+                0.07668577699223533,
+                0.0743345300143119,
+                0.06935466299182735,
+                0.0790375059877988,
+                0.06327472999691963,
+                0.06869230599841103,
+                0.06622564399731345
+              ],
+              "n": 35,
+              "min": 0.06327472999691963,
+              "median": 0.0790375059877988,
+              "max": 0.20009544098866172
+            },
+            "main_thread_cpu_s": {
+              "value": 0.06935887299999999,
+              "noise_floor": 0.152716105984016,
+              "round_values": [
+                0.07668098099999998,
+                0.07090109600000005,
+                0.06935887299999999,
+                0.07892794100000011,
+                0.06327173399999997,
+                0.068696235,
+                0.06608876400000008
+              ],
+              "n": 35,
+              "min": 0.06327173399999997,
+              "median": 0.07892794100000011,
+              "max": 0.11981163099999992
+            }
+          }
+        },
+        "delayed": {
+          "rounds": [
+            {
+              "load_average_1m": 10.63916015625,
+              "samples": [
+                {
+                  "wall_s": 0.07669607599382289,
+                  "main_thread_cpu_s": 0.076701605
+                },
+                {
+                  "wall_s": 0.07547339200391434,
+                  "main_thread_cpu_s": 0.07547788799999999
+                },
+                {
+                  "wall_s": 0.07236418599495664,
+                  "main_thread_cpu_s": 0.07221425199999998
+                },
+                {
+                  "wall_s": 0.08951846900163218,
+                  "main_thread_cpu_s": 0.08828338300000005
+                },
+                {
+                  "wall_s": 0.13471679200301878,
+                  "main_thread_cpu_s": 0.10110995200000006
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 10.82861328125,
+              "samples": [
+                {
+                  "wall_s": 0.09811994998017326,
+                  "main_thread_cpu_s": 0.09802428399999996
+                },
+                {
+                  "wall_s": 0.1023108449880965,
+                  "main_thread_cpu_s": 0.09133745400000004
+                },
+                {
+                  "wall_s": 0.0847004129900597,
+                  "main_thread_cpu_s": 0.08453449099999988
+                },
+                {
+                  "wall_s": 0.10314533699420281,
+                  "main_thread_cpu_s": 0.10286338500000003
+                },
+                {
+                  "wall_s": 0.11235304799629375,
+                  "main_thread_cpu_s": 0.10930165499999989
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 10.44189453125,
+              "samples": [
+                {
+                  "wall_s": 0.0700307599909138,
+                  "main_thread_cpu_s": 0.07002716400000009
+                },
+                {
+                  "wall_s": 0.07363413399434648,
+                  "main_thread_cpu_s": 0.07363832299999995
+                },
+                {
+                  "wall_s": 0.07010871902457438,
+                  "main_thread_cpu_s": 0.07010313400000001
+                },
+                {
+                  "wall_s": 0.11067516700131819,
+                  "main_thread_cpu_s": 0.11068259599999997
+                },
+                {
+                  "wall_s": 0.06836638000095263,
+                  "main_thread_cpu_s": 0.0683702180000001
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 10.44189453125,
+              "samples": [
+                {
+                  "wall_s": 0.066355618997477,
+                  "main_thread_cpu_s": 0.06636064399999997
+                },
+                {
+                  "wall_s": 0.08039521399769001,
+                  "main_thread_cpu_s": 0.08039988900000006
+                },
+                {
+                  "wall_s": 0.06896922198939137,
+                  "main_thread_cpu_s": 0.06897321999999995
+                },
+                {
+                  "wall_s": 0.0676431350002531,
+                  "main_thread_cpu_s": 0.06764690500000015
+                },
+                {
+                  "wall_s": 0.06567671900847927,
+                  "main_thread_cpu_s": 0.06568070400000003
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.845703125,
+              "samples": [
+                {
+                  "wall_s": 0.11724345301627181,
+                  "main_thread_cpu_s": 0.11639803199999998
+                },
+                {
+                  "wall_s": 0.08776259000296704,
+                  "main_thread_cpu_s": 0.08765953800000004
+                },
+                {
+                  "wall_s": 0.08000889199320227,
+                  "main_thread_cpu_s": 0.08000592900000014
+                },
+                {
+                  "wall_s": 0.12122795497998595,
+                  "main_thread_cpu_s": 0.0892031510000002
+                },
+                {
+                  "wall_s": 0.11184481999953277,
+                  "main_thread_cpu_s": 0.11184918099999996
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.61767578125,
+              "samples": [
+                {
+                  "wall_s": 0.07634647798840888,
+                  "main_thread_cpu_s": 0.07633147600000001
+                },
+                {
+                  "wall_s": 0.09179400699213147,
+                  "main_thread_cpu_s": 0.09176811000000007
+                },
+                {
+                  "wall_s": 0.06971561300451867,
+                  "main_thread_cpu_s": 0.06972051199999996
+                },
+                {
+                  "wall_s": 0.06831662898184732,
+                  "main_thread_cpu_s": 0.06832050499999998
+                },
+                {
+                  "wall_s": 0.06579602201236412,
+                  "main_thread_cpu_s": 0.065792976
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.16748046875,
+              "samples": [
+                {
+                  "wall_s": 0.16462768701603636,
+                  "main_thread_cpu_s": 0.12210258799999996
+                },
+                {
+                  "wall_s": 0.12537257399526425,
+                  "main_thread_cpu_s": 0.12232420799999999
+                },
+                {
+                  "wall_s": 0.12669437198201194,
+                  "main_thread_cpu_s": 0.11428861699999993
+                },
+                {
+                  "wall_s": 0.12652260399772786,
+                  "main_thread_cpu_s": 0.12110285199999993
+                },
+                {
+                  "wall_s": 0.2833057509851642,
+                  "main_thread_cpu_s": 0.12495412700000008
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.07236418599495664,
+              "noise_floor": 0.2612395996413628,
+              "round_values": [
+                0.07236418599495664,
+                0.0847004129900597,
+                0.06836638000095263,
+                0.06567671900847927,
+                0.08000889199320227,
+                0.06579602201236412,
+                0.12537257399526425
+              ],
+              "n": 35,
+              "min": 0.06567671900847927,
+              "median": 0.0847004129900597,
+              "max": 0.2833057509851642
+            },
+            "main_thread_cpu_s": {
+              "value": 0.07221425199999998,
+              "noise_floor": 0.2595265405504703,
+              "round_values": [
+                0.07221425199999998,
+                0.08453449099999988,
+                0.0683702180000001,
+                0.06568070400000003,
+                0.08000592900000014,
+                0.065792976,
+                0.11428861699999993
+              ],
+              "n": 35,
+              "min": 0.06568070400000003,
+              "median": 0.08453449099999988,
+              "max": 0.12495412700000008
+            }
+          }
+        }
+      }
+    },
+    "build-10k": {
+      "description": "build a Driver from a generated layered graph of 10,000 nodes",
+      "fingerprint": "20bf597f543f0c27451121675597702a8291cc425b245c61ad63681e1e0055db",
+      "frozen": true,
+      "uses_hamilton": true,
+      "metrics": [
+        "wall_s",
+        "main_thread_cpu_s"
+      ],
+      "warmup": 1,
+      "samples_per_round": 3,
+      "settings": {
+        "graph": {
+          "layers": 20,
+          "width": 500
+        },
+        "fixture_sha256": "06f1a66f1e4826137369a811182a98fe7195f147cb633475dce20b0297de6bef",
+        "input_x": 7,
+        "outputs": "every node of the last layer",
+        "path": "default Builder"
+      },
+      "sides": {
+        "branch-point": {
+          "rounds": [
+            {
+              "load_average_1m": 9.16748046875,
+              "samples": [
+                {
+                  "wall_s": 1.5897519899881445,
+                  "main_thread_cpu_s": 1.2005905979999998
+                },
+                {
+                  "wall_s": 3.338283691002289,
+                  "main_thread_cpu_s": 1.256757737
+                },
+                {
+                  "wall_s": 3.601110125979176,
+                  "main_thread_cpu_s": 1.2507567110000002
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 11.68994140625,
+              "samples": [
+                {
+                  "wall_s": 0.7533056829997804,
+                  "main_thread_cpu_s": 0.7520879480000002
+                },
+                {
+                  "wall_s": 0.8432605810230598,
+                  "main_thread_cpu_s": 0.8335221270000002
+                },
+                {
+                  "wall_s": 0.8294901830086019,
+                  "main_thread_cpu_s": 0.8283054989999998
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 11.57080078125,
+              "samples": [
+                {
+                  "wall_s": 0.7045224429748487,
+                  "main_thread_cpu_s": 0.7044663070000001
+                },
+                {
+                  "wall_s": 0.7668700909998734,
+                  "main_thread_cpu_s": 0.7662796869999999
+                },
+                {
+                  "wall_s": 0.8168314269860275,
+                  "main_thread_cpu_s": 0.8027074970000001
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.7392578125,
+              "samples": [
+                {
+                  "wall_s": 0.6823621719959192,
+                  "main_thread_cpu_s": 0.681417803
+                },
+                {
+                  "wall_s": 0.7944651579891797,
+                  "main_thread_cpu_s": 0.7929078060000001
+                },
+                {
+                  "wall_s": 0.6979906960041262,
+                  "main_thread_cpu_s": 0.6976825830000006
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.279296875,
+              "samples": [
+                {
+                  "wall_s": 1.0757231109892018,
+                  "main_thread_cpu_s": 0.9405264820000001
+                },
+                {
+                  "wall_s": 1.4249935260158964,
+                  "main_thread_cpu_s": 1.2052317009999998
+                },
+                {
+                  "wall_s": 1.4596422339964192,
+                  "main_thread_cpu_s": 1.2019979530000002
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.18017578125,
+              "samples": [
+                {
+                  "wall_s": 0.6991325410199352,
+                  "main_thread_cpu_s": 0.6990681899999998
+                },
+                {
+                  "wall_s": 0.7472830199985765,
+                  "main_thread_cpu_s": 0.7471560670000001
+                },
+                {
+                  "wall_s": 0.7903034179762471,
+                  "main_thread_cpu_s": 0.7901240789999999
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.92529296875,
+              "samples": [
+                {
+                  "wall_s": 0.7134802109794691,
+                  "main_thread_cpu_s": 0.7134515829999999
+                },
+                {
+                  "wall_s": 0.7421007140073925,
+                  "main_thread_cpu_s": 0.7420546679999998
+                },
+                {
+                  "wall_s": 0.6947909519949462,
+                  "main_thread_cpu_s": 0.6947339289999999
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.7045224429748487,
+              "noise_floor": 0.5406955630622186,
+              "round_values": [
+                1.5897519899881445,
+                0.7533056829997804,
+                0.7045224429748487,
+                0.6823621719959192,
+                1.0757231109892018,
+                0.6991325410199352,
+                0.6947909519949462
+              ],
+              "n": 21,
+              "min": 0.6823621719959192,
+              "median": 0.7903034179762471,
+              "max": 3.601110125979176
+            },
+            "main_thread_cpu_s": {
+              "value": 0.7044663070000001,
+              "noise_floor": 0.348906044984207,
+              "round_values": [
+                1.2005905979999998,
+                0.7520879480000002,
+                0.7044663070000001,
+                0.681417803,
+                0.9405264820000001,
+                0.6990681899999998,
+                0.6947339289999999
+              ],
+              "n": 21,
+              "min": 0.681417803,
+              "median": 0.7901240789999999,
+              "max": 1.256757737
+            }
+          }
+        },
+        "delayed": {
+          "rounds": [
+            {
+              "load_average_1m": 12.046875,
+              "samples": [
+                {
+                  "wall_s": 2.354824356996687,
+                  "main_thread_cpu_s": 1.2566249550000004
+                },
+                {
+                  "wall_s": 2.43320192801184,
+                  "main_thread_cpu_s": 1.2407679219999999
+                },
+                {
+                  "wall_s": 1.5798120689869393,
+                  "main_thread_cpu_s": 1.2455559950000001
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 11.92431640625,
+              "samples": [
+                {
+                  "wall_s": 0.6661313270160463,
+                  "main_thread_cpu_s": 0.6659144289999999
+                },
+                {
+                  "wall_s": 0.6550799459801055,
+                  "main_thread_cpu_s": 0.6547936480000001
+                },
+                {
+                  "wall_s": 0.6927933800034225,
+                  "main_thread_cpu_s": 0.6925232590000001
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 10.96435546875,
+              "samples": [
+                {
+                  "wall_s": 0.7369827780057676,
+                  "main_thread_cpu_s": 0.7369178139999999
+                },
+                {
+                  "wall_s": 0.710437911999179,
+                  "main_thread_cpu_s": 0.710340382
+                },
+                {
+                  "wall_s": 0.6782158819842152,
+                  "main_thread_cpu_s": 0.6779005170000003
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 10.326171875,
+              "samples": [
+                {
+                  "wall_s": 0.8488907589926384,
+                  "main_thread_cpu_s": 0.847457935
+                },
+                {
+                  "wall_s": 0.7581515680067241,
+                  "main_thread_cpu_s": 0.7579074989999999
+                },
+                {
+                  "wall_s": 0.7265825200011022,
+                  "main_thread_cpu_s": 0.7265008220000002
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.26220703125,
+              "samples": [
+                {
+                  "wall_s": 0.9125588820024859,
+                  "main_thread_cpu_s": 0.9108914600000002
+                },
+                {
+                  "wall_s": 0.6837871049938258,
+                  "main_thread_cpu_s": 0.6822042179999999
+                },
+                {
+                  "wall_s": 0.6589499859837815,
+                  "main_thread_cpu_s": 0.6571923589999997
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.76025390625,
+              "samples": [
+                {
+                  "wall_s": 0.7482954529987182,
+                  "main_thread_cpu_s": 0.747443241
+                },
+                {
+                  "wall_s": 0.834799550997559,
+                  "main_thread_cpu_s": 0.8054975610000001
+                },
+                {
+                  "wall_s": 0.7281558699905872,
+                  "main_thread_cpu_s": 0.7273367850000003
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.45068359375,
+              "samples": [
+                {
+                  "wall_s": 0.7158070119912736,
+                  "main_thread_cpu_s": 0.7156307100000001
+                },
+                {
+                  "wall_s": 0.8050246969796717,
+                  "main_thread_cpu_s": 0.804632158
+                },
+                {
+                  "wall_s": 0.9811135260097217,
+                  "main_thread_cpu_s": 0.9572342759999999
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.7158070119912736,
+              "noise_floor": 0.09668232197709933,
+              "round_values": [
+                1.5798120689869393,
+                0.6550799459801055,
+                0.6782158819842152,
+                0.7265825200011022,
+                0.6589499859837815,
+                0.7281558699905872,
+                0.7158070119912736
+              ],
+              "n": 21,
+              "min": 0.6550799459801055,
+              "median": 0.7369827780057676,
+              "max": 2.43320192801184
+            },
+            "main_thread_cpu_s": {
+              "value": 0.7156307100000001,
+              "noise_floor": 0.09801762979120975,
+              "round_values": [
+                1.2407679219999999,
+                0.6547936480000001,
+                0.6779005170000003,
+                0.7265008220000002,
+                0.6571923589999997,
+                0.7273367850000003,
+                0.7156307100000001
+              ],
+              "n": 21,
+              "min": 0.6547936480000001,
+              "median": 0.7369178139999999,
+              "max": 1.2566249550000004
+            }
+          }
+        }
+      }
+    },
+    "execute-default-1k": {
+      "description": "execute the 1,000-node layered graph on the default path",
+      "fingerprint": "f74835c84caea7da4128289b1dca782daf1eb2b35dcf8cdafd13cf1540ae4305",
+      "frozen": true,
+      "uses_hamilton": true,
+      "metrics": [
+        "wall_s",
+        "main_thread_cpu_s"
+      ],
+      "warmup": 2,
+      "samples_per_round": 10,
+      "settings": {
+        "graph": {
+          "layers": 20,
+          "width": 50
+        },
+        "fixture_sha256": "98e007c786de7b88b9a25681c64b4229ff43bc746626af526f57a934cb628653",
+        "input_x": 7,
+        "outputs": "every node of the last layer",
+        "path": "default"
+      },
+      "sides": {
+        "branch-point": {
+          "rounds": [
+            {
+              "load_average_1m": 8.09423828125,
+              "samples": [
+                {
+                  "wall_s": 0.01156081398949027,
+                  "main_thread_cpu_s": 0.011566090999999945
+                },
+                {
+                  "wall_s": 0.009163306007394567,
+                  "main_thread_cpu_s": 0.009167077000000079
+                },
+                {
+                  "wall_s": 0.010943762987153605,
+                  "main_thread_cpu_s": 0.010948175000000004
+                },
+                {
+                  "wall_s": 0.008707151020644233,
+                  "main_thread_cpu_s": 0.008711168000000047
+                },
+                {
+                  "wall_s": 0.009419481008080766,
+                  "main_thread_cpu_s": 0.009423532999999984
+                },
+                {
+                  "wall_s": 0.010271048988215625,
+                  "main_thread_cpu_s": 0.010275853000000112
+                },
+                {
+                  "wall_s": 0.00862247499753721,
+                  "main_thread_cpu_s": 0.00862646300000014
+                },
+                {
+                  "wall_s": 0.008892554003978148,
+                  "main_thread_cpu_s": 0.008897793999999903
+                },
+                {
+                  "wall_s": 0.009944827994331717,
+                  "main_thread_cpu_s": 0.009949274000000008
+                },
+                {
+                  "wall_s": 0.012359468004433438,
+                  "main_thread_cpu_s": 0.012363649999999948
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.68603515625,
+              "samples": [
+                {
+                  "wall_s": 0.010371405020123348,
+                  "main_thread_cpu_s": 0.010376015000000072
+                },
+                {
+                  "wall_s": 0.015106006001587957,
+                  "main_thread_cpu_s": 0.015111182000000056
+                },
+                {
+                  "wall_s": 0.0102476799802389,
+                  "main_thread_cpu_s": 0.010252480000000008
+                },
+                {
+                  "wall_s": 0.009185875998809934,
+                  "main_thread_cpu_s": 0.009189637999999944
+                },
+                {
+                  "wall_s": 0.009074139001313597,
+                  "main_thread_cpu_s": 0.009077875000000013
+                },
+                {
+                  "wall_s": 0.009040162985911593,
+                  "main_thread_cpu_s": 0.009043651999999902
+                },
+                {
+                  "wall_s": 0.010093621007399634,
+                  "main_thread_cpu_s": 0.010098732999999971
+                },
+                {
+                  "wall_s": 0.008753458998398855,
+                  "main_thread_cpu_s": 0.008757024999999974
+                },
+                {
+                  "wall_s": 0.008980337006505579,
+                  "main_thread_cpu_s": 0.008974376000000062
+                },
+                {
+                  "wall_s": 0.010446801024954766,
+                  "main_thread_cpu_s": 0.010452347999999834
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.68603515625,
+              "samples": [
+                {
+                  "wall_s": 0.00885535599081777,
+                  "main_thread_cpu_s": 0.008859428000000058
+                },
+                {
+                  "wall_s": 0.008802953001577407,
+                  "main_thread_cpu_s": 0.008806254999999985
+                },
+                {
+                  "wall_s": 0.008513712993590161,
+                  "main_thread_cpu_s": 0.008517285000000041
+                },
+                {
+                  "wall_s": 0.008657636994030327,
+                  "main_thread_cpu_s": 0.008660730999999977
+                },
+                {
+                  "wall_s": 0.00886532198637724,
+                  "main_thread_cpu_s": 0.00886943699999998
+                },
+                {
+                  "wall_s": 0.008877248998032883,
+                  "main_thread_cpu_s": 0.008796352000000063
+                },
+                {
+                  "wall_s": 0.010113714000908658,
+                  "main_thread_cpu_s": 0.010120085999999917
+                },
+                {
+                  "wall_s": 0.009137891000136733,
+                  "main_thread_cpu_s": 0.009141512999999879
+                },
+                {
+                  "wall_s": 0.009507813985692337,
+                  "main_thread_cpu_s": 0.009511818000000005
+                },
+                {
+                  "wall_s": 0.010930545016890392,
+                  "main_thread_cpu_s": 0.010935158999999972
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.310546875,
+              "samples": [
+                {
+                  "wall_s": 0.009420463000424206,
+                  "main_thread_cpu_s": 0.009426236000000032
+                },
+                {
+                  "wall_s": 0.008841966016916558,
+                  "main_thread_cpu_s": 0.008845041999999914
+                },
+                {
+                  "wall_s": 0.00870632499572821,
+                  "main_thread_cpu_s": 0.008693192000000072
+                },
+                {
+                  "wall_s": 0.008594407001510262,
+                  "main_thread_cpu_s": 0.00859766399999995
+                },
+                {
+                  "wall_s": 0.00908067700220272,
+                  "main_thread_cpu_s": 0.00908501500000003
+                },
+                {
+                  "wall_s": 0.009247758978744969,
+                  "main_thread_cpu_s": 0.009251552000000052
+                },
+                {
+                  "wall_s": 0.008734567993087694,
+                  "main_thread_cpu_s": 0.008737798999999935
+                },
+                {
+                  "wall_s": 0.009421865979675204,
+                  "main_thread_cpu_s": 0.009426358999999884
+                },
+                {
+                  "wall_s": 0.009045930986758322,
+                  "main_thread_cpu_s": 0.009050712999999933
+                },
+                {
+                  "wall_s": 0.009688829013612121,
+                  "main_thread_cpu_s": 0.009698289999999998
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.310546875,
+              "samples": [
+                {
+                  "wall_s": 0.00875503700808622,
+                  "main_thread_cpu_s": 0.008758888999999992
+                },
+                {
+                  "wall_s": 0.00841354500153102,
+                  "main_thread_cpu_s": 0.008417084000000075
+                },
+                {
+                  "wall_s": 0.013393536995863542,
+                  "main_thread_cpu_s": 0.013399430000000101
+                },
+                {
+                  "wall_s": 0.009129398997174576,
+                  "main_thread_cpu_s": 0.009133885000000008
+                },
+                {
+                  "wall_s": 0.011255978984991089,
+                  "main_thread_cpu_s": 0.011262979000000062
+                },
+                {
+                  "wall_s": 0.009552136005368084,
+                  "main_thread_cpu_s": 0.009556851000000144
+                },
+                {
+                  "wall_s": 0.009519963001366705,
+                  "main_thread_cpu_s": 0.009524740000000032
+                },
+                {
+                  "wall_s": 0.010644018009770662,
+                  "main_thread_cpu_s": 0.010648760999999896
+                },
+                {
+                  "wall_s": 0.008870398014551029,
+                  "main_thread_cpu_s": 0.008873810000000093
+                },
+                {
+                  "wall_s": 0.01485883499844931,
+                  "main_thread_cpu_s": 0.014863705000000005
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.12548828125,
+              "samples": [
+                {
+                  "wall_s": 0.010674100980395451,
+                  "main_thread_cpu_s": 0.010678790000000049
+                },
+                {
+                  "wall_s": 0.008785186015302315,
+                  "main_thread_cpu_s": 0.008789246999999945
+                },
+                {
+                  "wall_s": 0.011954123998293653,
+                  "main_thread_cpu_s": 0.011958944999999943
+                },
+                {
+                  "wall_s": 0.009389237005962059,
+                  "main_thread_cpu_s": 0.009392599999999973
+                },
+                {
+                  "wall_s": 0.009300270001403987,
+                  "main_thread_cpu_s": 0.009304250000000014
+                },
+                {
+                  "wall_s": 0.012010512000415474,
+                  "main_thread_cpu_s": 0.012017375999999969
+                },
+                {
+                  "wall_s": 0.009486853989074007,
+                  "main_thread_cpu_s": 0.00949238199999991
+                },
+                {
+                  "wall_s": 0.01055409898981452,
+                  "main_thread_cpu_s": 0.010559733999999876
+                },
+                {
+                  "wall_s": 0.00893852100125514,
+                  "main_thread_cpu_s": 0.00894208799999996
+                },
+                {
+                  "wall_s": 0.008974077994935215,
+                  "main_thread_cpu_s": 0.008978112000000094
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.12548828125,
+              "samples": [
+                {
+                  "wall_s": 0.009702770999865606,
+                  "main_thread_cpu_s": 0.009695724999999933
+                },
+                {
+                  "wall_s": 0.009109544014791027,
+                  "main_thread_cpu_s": 0.009113336999999944
+                },
+                {
+                  "wall_s": 0.009136959008174017,
+                  "main_thread_cpu_s": 0.009140931000000019
+                },
+                {
+                  "wall_s": 0.010886581992963329,
+                  "main_thread_cpu_s": 0.010892769999999996
+                },
+                {
+                  "wall_s": 0.009120687987888232,
+                  "main_thread_cpu_s": 0.009125210999999966
+                },
+                {
+                  "wall_s": 0.00952439900720492,
+                  "main_thread_cpu_s": 0.009528000000000092
+                },
+                {
+                  "wall_s": 0.009327654988737777,
+                  "main_thread_cpu_s": 0.009331202000000038
+                },
+                {
+                  "wall_s": 0.009993569023208693,
+                  "main_thread_cpu_s": 0.009999150999999928
+                },
+                {
+                  "wall_s": 0.009897752024699003,
+                  "main_thread_cpu_s": 0.009901779
+                },
+                {
+                  "wall_s": 0.009432479011593387,
+                  "main_thread_cpu_s": 0.009436669999999925
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.00862247499753721,
+              "noise_floor": 0.03148435011869486,
+              "round_values": [
+                0.00862247499753721,
+                0.008753458998398855,
+                0.008513712993590161,
+                0.008594407001510262,
+                0.00841354500153102,
+                0.008785186015302315,
+                0.009109544014791027
+              ],
+              "n": 70,
+              "min": 0.00841354500153102,
+              "median": 0.009358445997349918,
+              "max": 0.015106006001587957
+            },
+            "main_thread_cpu_s": {
+              "value": 0.00862646300000014,
+              "noise_floor": 0.031526478465148354,
+              "round_values": [
+                0.00862646300000014,
+                0.008757024999999974,
+                0.008517285000000041,
+                0.00859766399999995,
+                0.008417084000000075,
+                0.008789246999999945,
+                0.009113336999999944
+              ],
+              "n": 70,
+              "min": 0.008417084000000075,
+              "median": 0.009361901000000006,
+              "max": 0.015111182000000056
+            }
+          }
+        },
+        "delayed": {
+          "rounds": [
+            {
+              "load_average_1m": 8.09423828125,
+              "samples": [
+                {
+                  "wall_s": 0.014539763011271134,
+                  "main_thread_cpu_s": 0.014543691999999941
+                },
+                {
+                  "wall_s": 0.014786935003940016,
+                  "main_thread_cpu_s": 0.01479075299999999
+                },
+                {
+                  "wall_s": 0.014941634988645092,
+                  "main_thread_cpu_s": 0.014936216000000058
+                },
+                {
+                  "wall_s": 0.014514876005705446,
+                  "main_thread_cpu_s": 0.014518841999999976
+                },
+                {
+                  "wall_s": 0.015789157012477517,
+                  "main_thread_cpu_s": 0.015793023000000073
+                },
+                {
+                  "wall_s": 0.017272452008910477,
+                  "main_thread_cpu_s": 0.017278318000000015
+                },
+                {
+                  "wall_s": 0.01563208701554686,
+                  "main_thread_cpu_s": 0.01563629600000005
+                },
+                {
+                  "wall_s": 0.015386529004899785,
+                  "main_thread_cpu_s": 0.015383464999999985
+                },
+                {
+                  "wall_s": 0.014541693992214277,
+                  "main_thread_cpu_s": 0.014545840999999893
+                },
+                {
+                  "wall_s": 0.01778548301081173,
+                  "main_thread_cpu_s": 0.017791051000000113
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.68603515625,
+              "samples": [
+                {
+                  "wall_s": 0.01588095401530154,
+                  "main_thread_cpu_s": 0.01588599299999993
+                },
+                {
+                  "wall_s": 0.015178409987129271,
+                  "main_thread_cpu_s": 0.015182631000000057
+                },
+                {
+                  "wall_s": 0.015562268992653117,
+                  "main_thread_cpu_s": 0.015567172000000018
+                },
+                {
+                  "wall_s": 0.014952305005863309,
+                  "main_thread_cpu_s": 0.014956233000000041
+                },
+                {
+                  "wall_s": 0.016714847006369382,
+                  "main_thread_cpu_s": 0.016718830999999934
+                },
+                {
+                  "wall_s": 0.015073618007590994,
+                  "main_thread_cpu_s": 0.015077599000000053
+                },
+                {
+                  "wall_s": 0.016902413015486673,
+                  "main_thread_cpu_s": 0.01690849899999991
+                },
+                {
+                  "wall_s": 0.015363691985839978,
+                  "main_thread_cpu_s": 0.015368441000000121
+                },
+                {
+                  "wall_s": 0.01514908199897036,
+                  "main_thread_cpu_s": 0.015153329999999965
+                },
+                {
+                  "wall_s": 0.014633711980422959,
+                  "main_thread_cpu_s": 0.014636958000000089
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.68603515625,
+              "samples": [
+                {
+                  "wall_s": 0.014038151013664901,
+                  "main_thread_cpu_s": 0.014041244000000064
+                },
+                {
+                  "wall_s": 0.014345104020321742,
+                  "main_thread_cpu_s": 0.014348389000000017
+                },
+                {
+                  "wall_s": 0.014259982999647036,
+                  "main_thread_cpu_s": 0.01426345699999998
+                },
+                {
+                  "wall_s": 0.015774882020195946,
+                  "main_thread_cpu_s": 0.015779250999999994
+                },
+                {
+                  "wall_s": 0.028137519024312496,
+                  "main_thread_cpu_s": 0.025184132000000026
+                },
+                {
+                  "wall_s": 0.018619109003338963,
+                  "main_thread_cpu_s": 0.018624895999999946
+                },
+                {
+                  "wall_s": 0.01578236900968477,
+                  "main_thread_cpu_s": 0.01578707899999987
+                },
+                {
+                  "wall_s": 0.017457498994190246,
+                  "main_thread_cpu_s": 0.017416580999999987
+                },
+                {
+                  "wall_s": 0.015297648002160713,
+                  "main_thread_cpu_s": 0.015263035000000036
+                },
+                {
+                  "wall_s": 0.0167376630124636,
+                  "main_thread_cpu_s": 0.016689004999999923
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.310546875,
+              "samples": [
+                {
+                  "wall_s": 0.01623624298372306,
+                  "main_thread_cpu_s": 0.016240982000000015
+                },
+                {
+                  "wall_s": 0.016552713990677148,
+                  "main_thread_cpu_s": 0.01655730700000002
+                },
+                {
+                  "wall_s": 0.014836024987744167,
+                  "main_thread_cpu_s": 0.014840459999999944
+                },
+                {
+                  "wall_s": 0.014454190997639671,
+                  "main_thread_cpu_s": 0.014457849000000023
+                },
+                {
+                  "wall_s": 0.015682000026572496,
+                  "main_thread_cpu_s": 0.01568704799999998
+                },
+                {
+                  "wall_s": 0.01422911198460497,
+                  "main_thread_cpu_s": 0.014216491999999858
+                },
+                {
+                  "wall_s": 0.015229534998070449,
+                  "main_thread_cpu_s": 0.015234199000000004
+                },
+                {
+                  "wall_s": 0.014044349984033033,
+                  "main_thread_cpu_s": 0.014047568000000066
+                },
+                {
+                  "wall_s": 0.017668422020506114,
+                  "main_thread_cpu_s": 0.01767280800000015
+                },
+                {
+                  "wall_s": 0.017502119997516274,
+                  "main_thread_cpu_s": 0.01750708199999984
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.310546875,
+              "samples": [
+                {
+                  "wall_s": 0.014647739997599274,
+                  "main_thread_cpu_s": 0.014652443999999987
+                },
+                {
+                  "wall_s": 0.01451670000096783,
+                  "main_thread_cpu_s": 0.01452014200000007
+                },
+                {
+                  "wall_s": 0.01401214799261652,
+                  "main_thread_cpu_s": 0.014005335000000008
+                },
+                {
+                  "wall_s": 0.014482646016404033,
+                  "main_thread_cpu_s": 0.014486342000000096
+                },
+                {
+                  "wall_s": 0.014356456988025457,
+                  "main_thread_cpu_s": 0.014359745000000146
+                },
+                {
+                  "wall_s": 0.015153451007790864,
+                  "main_thread_cpu_s": 0.015159209000000118
+                },
+                {
+                  "wall_s": 0.014055439998628572,
+                  "main_thread_cpu_s": 0.014058663999999998
+                },
+                {
+                  "wall_s": 0.01955455300048925,
+                  "main_thread_cpu_s": 0.019559106999999853
+                },
+                {
+                  "wall_s": 0.01716215498163365,
+                  "main_thread_cpu_s": 0.017166628999999878
+                },
+                {
+                  "wall_s": 0.01630629997816868,
+                  "main_thread_cpu_s": 0.016310923000000033
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.12548828125,
+              "samples": [
+                {
+                  "wall_s": 0.014002863987116143,
+                  "main_thread_cpu_s": 0.014005992000000078
+                },
+                {
+                  "wall_s": 0.01434301899280399,
+                  "main_thread_cpu_s": 0.014333260000000014
+                },
+                {
+                  "wall_s": 0.015134727000258863,
+                  "main_thread_cpu_s": 0.01514043399999998
+                },
+                {
+                  "wall_s": 0.014566036988981068,
+                  "main_thread_cpu_s": 0.014569803999999964
+                },
+                {
+                  "wall_s": 0.01711910602170974,
+                  "main_thread_cpu_s": 0.017124014000000076
+                },
+                {
+                  "wall_s": 0.015615325013641268,
+                  "main_thread_cpu_s": 0.015619323000000018
+                },
+                {
+                  "wall_s": 0.01647744601359591,
+                  "main_thread_cpu_s": 0.016483162000000107
+                },
+                {
+                  "wall_s": 0.014662132016383111,
+                  "main_thread_cpu_s": 0.014665466000000071
+                },
+                {
+                  "wall_s": 0.01536002999637276,
+                  "main_thread_cpu_s": 0.015364217999999985
+                },
+                {
+                  "wall_s": 0.014036081993253902,
+                  "main_thread_cpu_s": 0.01403907900000001
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.19580078125,
+              "samples": [
+                {
+                  "wall_s": 0.017855518002761528,
+                  "main_thread_cpu_s": 0.01785991500000006
+                },
+                {
+                  "wall_s": 0.014492560003418475,
+                  "main_thread_cpu_s": 0.014496206999999983
+                },
+                {
+                  "wall_s": 0.015031076007289812,
+                  "main_thread_cpu_s": 0.015021490000000082
+                },
+                {
+                  "wall_s": 0.01510430098278448,
+                  "main_thread_cpu_s": 0.015108330000000003
+                },
+                {
+                  "wall_s": 0.014919195993570611,
+                  "main_thread_cpu_s": 0.014922947999999936
+                },
+                {
+                  "wall_s": 0.015075987001182511,
+                  "main_thread_cpu_s": 0.015079809999999805
+                },
+                {
+                  "wall_s": 0.016322809999110177,
+                  "main_thread_cpu_s": 0.016316884000000087
+                },
+                {
+                  "wall_s": 0.01699984399601817,
+                  "main_thread_cpu_s": 0.017003855000000012
+                },
+                {
+                  "wall_s": 0.01548328300123103,
+                  "main_thread_cpu_s": 0.015399020999999902
+                },
+                {
+                  "wall_s": 0.015197107015410438,
+                  "main_thread_cpu_s": 0.015156210999999864
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.014044349984033033,
+              "noise_floor": 0.03579574801685206,
+              "round_values": [
+                0.014514876005705446,
+                0.014633711980422959,
+                0.014038151013664901,
+                0.014044349984033033,
+                0.01401214799261652,
+                0.014002863987116143,
+                0.014492560003418475
+              ],
+              "n": 70,
+              "min": 0.014002863987116143,
+              "median": 0.015187758501269855,
+              "max": 0.028137519024312496
+            },
+            "main_thread_cpu_s": {
+              "value": 0.014047568000000066,
+              "noise_floor": 0.03650809876840573,
+              "round_values": [
+                0.014518841999999976,
+                0.014636958000000089,
+                0.014041244000000064,
+                0.014047568000000066,
+                0.014005335000000008,
+                0.014005992000000078,
+                0.014496206999999983
+              ],
+              "n": 70,
+              "min": 0.014005335000000008,
+              "median": 0.015170920000000088,
+              "max": 0.025184132000000026
+            }
+          }
+        }
+      }
+    },
+    "execute-default-10k": {
+      "description": "execute the 10,000-node layered graph on the default path",
+      "fingerprint": "57160c38029495178de8c785adee6d21dd7135919e2533f58c8da180502984a6",
+      "frozen": true,
+      "uses_hamilton": true,
+      "metrics": [
+        "wall_s",
+        "main_thread_cpu_s"
+      ],
+      "warmup": 1,
+      "samples_per_round": 5,
+      "settings": {
+        "graph": {
+          "layers": 20,
+          "width": 500
+        },
+        "fixture_sha256": "06f1a66f1e4826137369a811182a98fe7195f147cb633475dce20b0297de6bef",
+        "input_x": 7,
+        "outputs": "every node of the last layer",
+        "path": "default"
+      },
+      "sides": {
+        "branch-point": {
+          "rounds": [
+            {
+              "load_average_1m": 7.19580078125,
+              "samples": [
+                {
+                  "wall_s": 0.12105585198150948,
+                  "main_thread_cpu_s": 0.11725686700000004
+                },
+                {
+                  "wall_s": 0.09963732698815875,
+                  "main_thread_cpu_s": 0.09964489100000007
+                },
+                {
+                  "wall_s": 0.09946684600436129,
+                  "main_thread_cpu_s": 0.09946320199999992
+                },
+                {
+                  "wall_s": 0.11307627300266176,
+                  "main_thread_cpu_s": 0.11307195200000031
+                },
+                {
+                  "wall_s": 0.09885485999984667,
+                  "main_thread_cpu_s": 0.09885953900000022
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 6.7646484375,
+              "samples": [
+                {
+                  "wall_s": 0.09817468898836523,
+                  "main_thread_cpu_s": 0.09816756199999999
+                },
+                {
+                  "wall_s": 0.10022649200982414,
+                  "main_thread_cpu_s": 0.10019778900000009
+                },
+                {
+                  "wall_s": 0.10647557899937965,
+                  "main_thread_cpu_s": 0.10645640999999983
+                },
+                {
+                  "wall_s": 0.09535612998297438,
+                  "main_thread_cpu_s": 0.09534329199999991
+                },
+                {
+                  "wall_s": 0.09693714900640771,
+                  "main_thread_cpu_s": 0.09692637400000015
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 6.302734375,
+              "samples": [
+                {
+                  "wall_s": 0.11074356301105581,
+                  "main_thread_cpu_s": 0.11057022700000019
+                },
+                {
+                  "wall_s": 0.10464490400045179,
+                  "main_thread_cpu_s": 0.10446537199999995
+                },
+                {
+                  "wall_s": 0.10478190399589948,
+                  "main_thread_cpu_s": 0.10459112200000042
+                },
+                {
+                  "wall_s": 0.1120152679795865,
+                  "main_thread_cpu_s": 0.11181677599999995
+                },
+                {
+                  "wall_s": 0.10759214998688549,
+                  "main_thread_cpu_s": 0.1073465549999999
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 5.4873046875,
+              "samples": [
+                {
+                  "wall_s": 0.10846749099437147,
+                  "main_thread_cpu_s": 0.10847202499999975
+                },
+                {
+                  "wall_s": 0.10632531499140896,
+                  "main_thread_cpu_s": 0.10632957500000018
+                },
+                {
+                  "wall_s": 0.10330456600058824,
+                  "main_thread_cpu_s": 0.10328922699999987
+                },
+                {
+                  "wall_s": 0.10114075901219621,
+                  "main_thread_cpu_s": 0.1011448399999999
+                },
+                {
+                  "wall_s": 0.11114992000511847,
+                  "main_thread_cpu_s": 0.11114790799999996
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 5.4873046875,
+              "samples": [
+                {
+                  "wall_s": 0.10606790700694546,
+                  "main_thread_cpu_s": 0.10606486100000012
+                },
+                {
+                  "wall_s": 0.10957972900359891,
+                  "main_thread_cpu_s": 0.10956700900000005
+                },
+                {
+                  "wall_s": 0.1088931970007252,
+                  "main_thread_cpu_s": 0.10887961699999993
+                },
+                {
+                  "wall_s": 0.10357943898998201,
+                  "main_thread_cpu_s": 0.10358338499999986
+                },
+                {
+                  "wall_s": 0.10648587701143697,
+                  "main_thread_cpu_s": 0.10648173700000019
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 4.79736328125,
+              "samples": [
+                {
+                  "wall_s": 0.11296782898716629,
+                  "main_thread_cpu_s": 0.11297260499999995
+                },
+                {
+                  "wall_s": 0.10271793400170282,
+                  "main_thread_cpu_s": 0.10272173699999998
+                },
+                {
+                  "wall_s": 0.10192967701004818,
+                  "main_thread_cpu_s": 0.10192773300000013
+                },
+                {
+                  "wall_s": 0.11070211199694313,
+                  "main_thread_cpu_s": 0.11070684100000028
+                },
+                {
+                  "wall_s": 0.11316457999055274,
+                  "main_thread_cpu_s": 0.11316277200000036
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 4.97412109375,
+              "samples": [
+                {
+                  "wall_s": 0.10875660099554807,
+                  "main_thread_cpu_s": 0.10875625799999966
+                },
+                {
+                  "wall_s": 0.10647877099108882,
+                  "main_thread_cpu_s": 0.10647488999999988
+                },
+                {
+                  "wall_s": 0.11113778501749039,
+                  "main_thread_cpu_s": 0.11107785999999997
+                },
+                {
+                  "wall_s": 0.10596161300782114,
+                  "main_thread_cpu_s": 0.10578015799999996
+                },
+                {
+                  "wall_s": 0.10723660301300697,
+                  "main_thread_cpu_s": 0.10723409999999989
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.10192967701004818,
+              "noise_floor": 0.05680430047898946,
+              "round_values": [
+                0.09885485999984667,
+                0.09535612998297438,
+                0.10464490400045179,
+                0.10114075901219621,
+                0.10357943898998201,
+                0.10192967701004818,
+                0.10596161300782114
+              ],
+              "n": 35,
+              "min": 0.09535612998297438,
+              "median": 0.10647557899937965,
+              "max": 0.12105585198150948
+            },
+            "main_thread_cpu_s": {
+              "value": 0.10192773300000013,
+              "noise_floor": 0.0549981132220386,
+              "round_values": [
+                0.09885953900000022,
+                0.09534329199999991,
+                0.10446537199999995,
+                0.1011448399999999,
+                0.10358338499999986,
+                0.10192773300000013,
+                0.10578015799999996
+              ],
+              "n": 35,
+              "min": 0.09534329199999991,
+              "median": 0.10645640999999983,
+              "max": 0.11725686700000004
+            }
+          }
+        },
+        "delayed": {
+          "rounds": [
+            {
+              "load_average_1m": 7.1796875,
+              "samples": [
+                {
+                  "wall_s": 0.16248097701463848,
+                  "main_thread_cpu_s": 0.16237303700000005
+                },
+                {
+                  "wall_s": 0.161262412002543,
+                  "main_thread_cpu_s": 0.16107628600000012
+                },
+                {
+                  "wall_s": 0.1683684150048066,
+                  "main_thread_cpu_s": 0.16796655900000035
+                },
+                {
+                  "wall_s": 0.1602455510001164,
+                  "main_thread_cpu_s": 0.16006843700000006
+                },
+                {
+                  "wall_s": 0.16583587901550345,
+                  "main_thread_cpu_s": 0.16564971699999997
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.1796875,
+              "samples": [
+                {
+                  "wall_s": 0.16885726901818998,
+                  "main_thread_cpu_s": 0.16884917200000027
+                },
+                {
+                  "wall_s": 0.1692845269863028,
+                  "main_thread_cpu_s": 0.16927970100000023
+                },
+                {
+                  "wall_s": 0.16481001098873094,
+                  "main_thread_cpu_s": 0.16481313199999992
+                },
+                {
+                  "wall_s": 0.16001688200049102,
+                  "main_thread_cpu_s": 0.16001136399999982
+                },
+                {
+                  "wall_s": 0.15118995698867366,
+                  "main_thread_cpu_s": 0.15118437100000026
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 6.302734375,
+              "samples": [
+                {
+                  "wall_s": 0.17137382400687784,
+                  "main_thread_cpu_s": 0.17115797099999996
+                },
+                {
+                  "wall_s": 0.1691101040050853,
+                  "main_thread_cpu_s": 0.1689450159999999
+                },
+                {
+                  "wall_s": 0.16396257898304611,
+                  "main_thread_cpu_s": 0.1637867100000001
+                },
+                {
+                  "wall_s": 0.16076434499700554,
+                  "main_thread_cpu_s": 0.16065151500000008
+                },
+                {
+                  "wall_s": 0.16374284800258465,
+                  "main_thread_cpu_s": 0.1635518659999997
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 5.8779296875,
+              "samples": [
+                {
+                  "wall_s": 0.16640382399782538,
+                  "main_thread_cpu_s": 0.16639797699999992
+                },
+                {
+                  "wall_s": 0.16281402099411935,
+                  "main_thread_cpu_s": 0.16279720999999991
+                },
+                {
+                  "wall_s": 0.16110092200688086,
+                  "main_thread_cpu_s": 0.1610739080000001
+                },
+                {
+                  "wall_s": 0.1597344680048991,
+                  "main_thread_cpu_s": 0.15972715599999976
+                },
+                {
+                  "wall_s": 0.16744793800171465,
+                  "main_thread_cpu_s": 0.167444186
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 5.1279296875,
+              "samples": [
+                {
+                  "wall_s": 0.1622407219838351,
+                  "main_thread_cpu_s": 0.1622331290000001
+                },
+                {
+                  "wall_s": 0.15961615700507537,
+                  "main_thread_cpu_s": 0.15959599400000002
+                },
+                {
+                  "wall_s": 0.15547080800752155,
+                  "main_thread_cpu_s": 0.15545558400000026
+                },
+                {
+                  "wall_s": 0.1671925749978982,
+                  "main_thread_cpu_s": 0.16718919599999982
+                },
+                {
+                  "wall_s": 0.18666357899201103,
+                  "main_thread_cpu_s": 0.18561820399999984
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 4.79736328125,
+              "samples": [
+                {
+                  "wall_s": 0.2564331659814343,
+                  "main_thread_cpu_s": 0.23625735999999975
+                },
+                {
+                  "wall_s": 0.1669349950097967,
+                  "main_thread_cpu_s": 0.1669084940000003
+                },
+                {
+                  "wall_s": 0.16319193498929963,
+                  "main_thread_cpu_s": 0.1631742009999999
+                },
+                {
+                  "wall_s": 0.16003933700267226,
+                  "main_thread_cpu_s": 0.15999593899999986
+                },
+                {
+                  "wall_s": 0.17984973697457463,
+                  "main_thread_cpu_s": 0.1798524800000001
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 5.056640625,
+              "samples": [
+                {
+                  "wall_s": 0.16123510201578029,
+                  "main_thread_cpu_s": 0.161139178
+                },
+                {
+                  "wall_s": 0.16095127901644446,
+                  "main_thread_cpu_s": 0.1605679710000003
+                },
+                {
+                  "wall_s": 0.16185559300356545,
+                  "main_thread_cpu_s": 0.16186149100000025
+                },
+                {
+                  "wall_s": 0.16783159799524583,
+                  "main_thread_cpu_s": 0.16776067399999972
+                },
+                {
+                  "wall_s": 0.15452268699300475,
+                  "main_thread_cpu_s": 0.15435412500000023
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.1597344680048991,
+              "noise_floor": 0.035827358231387586,
+              "round_values": [
+                0.1602455510001164,
+                0.15118995698867366,
+                0.16076434499700554,
+                0.1597344680048991,
+                0.15547080800752155,
+                0.16003933700267226,
+                0.15452268699300475
+              ],
+              "n": 35,
+              "min": 0.15118995698867366,
+              "median": 0.16319193498929963,
+              "max": 0.2564331659814343
+            },
+            "main_thread_cpu_s": {
+              "value": 0.15972715599999976,
+              "noise_floor": 0.03577545699242176,
+              "round_values": [
+                0.16006843700000006,
+                0.15118437100000026,
+                0.16065151500000008,
+                0.15972715599999976,
+                0.15545558400000026,
+                0.15999593899999986,
+                0.15435412500000023
+              ],
+              "n": 35,
+              "min": 0.15118437100000026,
+              "median": 0.1631742009999999,
+              "max": 0.23625735999999975
+            }
+          }
+        }
+      }
+    },
+    "execute-tasks-sync-1k": {
+      "description": "execute the 1,000-node layered graph on the task-based path with SynchronousLocalTaskExecutor as the local and the remote executor",
+      "fingerprint": "20fcacec44d7054264fac60e2ca5108f9b712ca98145ed3935d743a29b44665c",
+      "frozen": true,
+      "uses_hamilton": true,
+      "metrics": [
+        "wall_s",
+        "main_thread_cpu_s"
+      ],
+      "warmup": 1,
+      "samples_per_round": 5,
+      "settings": {
+        "graph": {
+          "layers": 20,
+          "width": 50
+        },
+        "fixture_sha256": "98e007c786de7b88b9a25681c64b4229ff43bc746626af526f57a934cb628653",
+        "input_x": 7,
+        "outputs": "every node of the last layer",
+        "path": "task-based",
+        "local_executor": "SynchronousLocalTaskExecutor",
+        "remote_executor": "SynchronousLocalTaskExecutor"
+      },
+      "sides": {
+        "branch-point": {
+          "rounds": [
+            {
+              "load_average_1m": 5.056640625,
+              "samples": [
+                {
+                  "wall_s": 0.220590651006205,
+                  "main_thread_cpu_s": 0.2205956120000001
+                },
+                {
+                  "wall_s": 0.21581626200350001,
+                  "main_thread_cpu_s": 0.21580939600000004
+                },
+                {
+                  "wall_s": 0.22607761999825016,
+                  "main_thread_cpu_s": 0.2260811359999999
+                },
+                {
+                  "wall_s": 0.2201502870011609,
+                  "main_thread_cpu_s": 0.22014324399999996
+                },
+                {
+                  "wall_s": 0.2484481239807792,
+                  "main_thread_cpu_s": 0.24841241599999986
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 6.20703125,
+              "samples": [
+                {
+                  "wall_s": 0.5126200649829116,
+                  "main_thread_cpu_s": 0.4188829570000001
+                },
+                {
+                  "wall_s": 0.6508930340060033,
+                  "main_thread_cpu_s": 0.43778874700000014
+                },
+                {
+                  "wall_s": 0.688620503002312,
+                  "main_thread_cpu_s": 0.430792222
+                },
+                {
+                  "wall_s": 0.4893738500250038,
+                  "main_thread_cpu_s": 0.3929474370000001
+                },
+                {
+                  "wall_s": 0.5411461140029132,
+                  "main_thread_cpu_s": 0.3973333160000001
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 6.51123046875,
+              "samples": [
+                {
+                  "wall_s": 0.5125814439961687,
+                  "main_thread_cpu_s": 0.45171133799999996
+                },
+                {
+                  "wall_s": 0.5806288569874596,
+                  "main_thread_cpu_s": 0.4288248860000001
+                },
+                {
+                  "wall_s": 0.4301638329925481,
+                  "main_thread_cpu_s": 0.41387212500000015
+                },
+                {
+                  "wall_s": 0.2824027269962244,
+                  "main_thread_cpu_s": 0.28237405699999973
+                },
+                {
+                  "wall_s": 0.2538511980092153,
+                  "main_thread_cpu_s": 0.25145709799999993
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 6.6279296875,
+              "samples": [
+                {
+                  "wall_s": 0.5314728179946542,
+                  "main_thread_cpu_s": 0.4084199879999999
+                },
+                {
+                  "wall_s": 0.5610200469964184,
+                  "main_thread_cpu_s": 0.4193275409999997
+                },
+                {
+                  "wall_s": 0.5365743819857016,
+                  "main_thread_cpu_s": 0.4021498730000004
+                },
+                {
+                  "wall_s": 0.5805552219972014,
+                  "main_thread_cpu_s": 0.410041144
+                },
+                {
+                  "wall_s": 0.4628018400107976,
+                  "main_thread_cpu_s": 0.41633636600000035
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.5390625,
+              "samples": [
+                {
+                  "wall_s": 0.4001757680089213,
+                  "main_thread_cpu_s": 0.39500852
+                },
+                {
+                  "wall_s": 0.7447145040205214,
+                  "main_thread_cpu_s": 0.42735363699999995
+                },
+                {
+                  "wall_s": 0.45330575900152326,
+                  "main_thread_cpu_s": 0.42140397500000004
+                },
+                {
+                  "wall_s": 0.5112480640236754,
+                  "main_thread_cpu_s": 0.41706318399999986
+                },
+                {
+                  "wall_s": 0.8994183810136747,
+                  "main_thread_cpu_s": 0.4393623990000002
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.03369140625,
+              "samples": [
+                {
+                  "wall_s": 0.2194232159818057,
+                  "main_thread_cpu_s": 0.2185271390000001
+                },
+                {
+                  "wall_s": 0.21787973199388944,
+                  "main_thread_cpu_s": 0.21743032099999993
+                },
+                {
+                  "wall_s": 0.2081496939936187,
+                  "main_thread_cpu_s": 0.20771662200000018
+                },
+                {
+                  "wall_s": 0.21721316999173723,
+                  "main_thread_cpu_s": 0.216656395
+                },
+                {
+                  "wall_s": 0.21431886500795372,
+                  "main_thread_cpu_s": 0.2134699790000003
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.03369140625,
+              "samples": [
+                {
+                  "wall_s": 0.26578209799481556,
+                  "main_thread_cpu_s": 0.26564270300000015
+                },
+                {
+                  "wall_s": 0.32171157299308106,
+                  "main_thread_cpu_s": 0.3164582090000001
+                },
+                {
+                  "wall_s": 0.2768804600054864,
+                  "main_thread_cpu_s": 0.2645252599999999
+                },
+                {
+                  "wall_s": 0.23344724599155597,
+                  "main_thread_cpu_s": 0.23344102399999977
+                },
+                {
+                  "wall_s": 0.2376143229776062,
+                  "main_thread_cpu_s": 0.23232914700000018
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.2538511980092153,
+              "noise_floor": 0.9729541556007608,
+              "round_values": [
+                0.21581626200350001,
+                0.4893738500250038,
+                0.2538511980092153,
+                0.4628018400107976,
+                0.4001757680089213,
+                0.2081496939936187,
+                0.23344724599155597
+              ],
+              "n": 35,
+              "min": 0.2081496939936187,
+              "median": 0.4001757680089213,
+              "max": 0.8994183810136747
+            },
+            "main_thread_cpu_s": {
+              "value": 0.25145709799999993,
+              "noise_floor": 0.712642933626793,
+              "round_values": [
+                0.21580939600000004,
+                0.3929474370000001,
+                0.25145709799999993,
+                0.4021498730000004,
+                0.39500852,
+                0.20771662200000018,
+                0.23232914700000018
+              ],
+              "n": 35,
+              "min": 0.20771662200000018,
+              "median": 0.3929474370000001,
+              "max": 0.45171133799999996
+            }
+          }
+        },
+        "delayed": {
+          "rounds": [
+            {
+              "load_average_1m": 5.0517578125,
+              "samples": [
+                {
+                  "wall_s": 0.23625588699360378,
+                  "main_thread_cpu_s": 0.23624539200000005
+                },
+                {
+                  "wall_s": 0.2469722819805611,
+                  "main_thread_cpu_s": 0.246956395
+                },
+                {
+                  "wall_s": 0.22632236799108796,
+                  "main_thread_cpu_s": 0.22631845100000003
+                },
+                {
+                  "wall_s": 0.41225326800486073,
+                  "main_thread_cpu_s": 0.32855974
+                },
+                {
+                  "wall_s": 0.692764564009849,
+                  "main_thread_cpu_s": 0.43959062800000037
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 5.5283203125,
+              "samples": [
+                {
+                  "wall_s": 0.6246517620165832,
+                  "main_thread_cpu_s": 0.4277809939999999
+                },
+                {
+                  "wall_s": 0.4548445050022565,
+                  "main_thread_cpu_s": 0.42110245000000024
+                },
+                {
+                  "wall_s": 0.4853828190243803,
+                  "main_thread_cpu_s": 0.4318910100000002
+                },
+                {
+                  "wall_s": 0.651056617993163,
+                  "main_thread_cpu_s": 0.4378527110000001
+                },
+                {
+                  "wall_s": 0.4694715079967864,
+                  "main_thread_cpu_s": 0.43156116399999966
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.03125,
+              "samples": [
+                {
+                  "wall_s": 0.22938536599394865,
+                  "main_thread_cpu_s": 0.229372213
+                },
+                {
+                  "wall_s": 0.22599760600132868,
+                  "main_thread_cpu_s": 0.22598187999999997
+                },
+                {
+                  "wall_s": 0.2649474969948642,
+                  "main_thread_cpu_s": 0.264911114
+                },
+                {
+                  "wall_s": 0.2251483720028773,
+                  "main_thread_cpu_s": 0.2251334869999999
+                },
+                {
+                  "wall_s": 0.22625294898170978,
+                  "main_thread_cpu_s": 0.22625548800000006
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.03125,
+              "samples": [
+                {
+                  "wall_s": 0.2332677409867756,
+                  "main_thread_cpu_s": 0.2332473759999999
+                },
+                {
+                  "wall_s": 0.222761504992377,
+                  "main_thread_cpu_s": 0.2220077519999999
+                },
+                {
+                  "wall_s": 0.23729849100345746,
+                  "main_thread_cpu_s": 0.23728446200000008
+                },
+                {
+                  "wall_s": 0.273572789010359,
+                  "main_thread_cpu_s": 0.27355552800000016
+                },
+                {
+                  "wall_s": 0.3194701640168205,
+                  "main_thread_cpu_s": 0.31348115099999996
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.81640625,
+              "samples": [
+                {
+                  "wall_s": 0.7036253030237276,
+                  "main_thread_cpu_s": 0.4417218949999999
+                },
+                {
+                  "wall_s": 0.7594995909894351,
+                  "main_thread_cpu_s": 0.4493358999999999
+                },
+                {
+                  "wall_s": 0.4228892600222025,
+                  "main_thread_cpu_s": 0.42039956999999983
+                },
+                {
+                  "wall_s": 0.43185237899888307,
+                  "main_thread_cpu_s": 0.4079437399999999
+                },
+                {
+                  "wall_s": 0.4197605249937624,
+                  "main_thread_cpu_s": 0.41648857699999997
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.47216796875,
+              "samples": [
+                {
+                  "wall_s": 0.27536754799075425,
+                  "main_thread_cpu_s": 0.275371821
+                },
+                {
+                  "wall_s": 0.2535476830089465,
+                  "main_thread_cpu_s": 0.25328170000000005
+                },
+                {
+                  "wall_s": 0.23309043800691143,
+                  "main_thread_cpu_s": 0.2316475309999999
+                },
+                {
+                  "wall_s": 0.21920495299855247,
+                  "main_thread_cpu_s": 0.21917272099999985
+                },
+                {
+                  "wall_s": 0.2199814989871811,
+                  "main_thread_cpu_s": 0.21997645099999996
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.71044921875,
+              "samples": [
+                {
+                  "wall_s": 0.23052705399459228,
+                  "main_thread_cpu_s": 0.2304638280000002
+                },
+                {
+                  "wall_s": 0.24457306999829598,
+                  "main_thread_cpu_s": 0.244571431
+                },
+                {
+                  "wall_s": 0.22627897598431446,
+                  "main_thread_cpu_s": 0.22626361500000014
+                },
+                {
+                  "wall_s": 0.23010121000697836,
+                  "main_thread_cpu_s": 0.2301034460000002
+                },
+                {
+                  "wall_s": 0.22828886599745601,
+                  "main_thread_cpu_s": 0.2280671019999998
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.22627897598431446,
+              "noise_floor": 0.8706024019440552,
+              "round_values": [
+                0.22632236799108796,
+                0.4548445050022565,
+                0.2251483720028773,
+                0.222761504992377,
+                0.4197605249937624,
+                0.21920495299855247,
+                0.22627897598431446
+              ],
+              "n": 35,
+              "min": 0.21920495299855247,
+              "median": 0.2469722819805611,
+              "max": 0.7594995909894351
+            },
+            "main_thread_cpu_s": {
+              "value": 0.22626361500000014,
+              "noise_floor": 0.8217670702379606,
+              "round_values": [
+                0.22631845100000003,
+                0.42110245000000024,
+                0.2251334869999999,
+                0.2220077519999999,
+                0.4079437399999999,
+                0.21917272099999985,
+                0.22626361500000014
+              ],
+              "n": 35,
+              "min": 0.21917272099999985,
+              "median": 0.246956395,
+              "max": 0.4493358999999999
+            }
+          }
+        }
+      }
+    },
+    "tiny-nodes": {
+      "description": "per-execution overhead: 200 executes of a 10-node graph of tiny nodes per sample, on the default path",
+      "fingerprint": "05962dd57414d2620d09e9b28f4b5b9c1dcdf8b7d4e6799c7c9b3c53daa8ac13",
+      "frozen": true,
+      "uses_hamilton": true,
+      "metrics": [
+        "wall_per_execute_s",
+        "main_thread_cpu_per_execute_s"
+      ],
+      "warmup": 1,
+      "samples_per_round": 10,
+      "settings": {
+        "graph": {
+          "layers": 5,
+          "width": 2
+        },
+        "fixture_sha256": "3c6b33369f4883c92f34ed87395dfa0db3535f12f19a7bdcc14e5f2099276fb8",
+        "input_x": 7,
+        "outputs": "every node of the last layer",
+        "path": "default",
+        "executes_per_sample": 200
+      },
+      "sides": {
+        "branch-point": {
+          "rounds": [
+            {
+              "load_average_1m": 7.71044921875,
+              "samples": [
+                {
+                  "wall_per_execute_s": 0.00010070885997265578,
+                  "main_thread_cpu_per_execute_s": 0.0001007458750000001
+                },
+                {
+                  "wall_per_execute_s": 0.00010284124000463635,
+                  "main_thread_cpu_per_execute_s": 0.00010286467999999994
+                },
+                {
+                  "wall_per_execute_s": 9.981111492379568e-05,
+                  "main_thread_cpu_per_execute_s": 9.977753499999964e-05
+                },
+                {
+                  "wall_per_execute_s": 0.00010156833493965678,
+                  "main_thread_cpu_per_execute_s": 0.00010158973999999987
+                },
+                {
+                  "wall_per_execute_s": 9.924132507876493e-05,
+                  "main_thread_cpu_per_execute_s": 9.926012500000025e-05
+                },
+                {
+                  "wall_per_execute_s": 0.00010102488493430429,
+                  "main_thread_cpu_per_execute_s": 0.00010104198000000009
+                },
+                {
+                  "wall_per_execute_s": 9.987517507397569e-05,
+                  "main_thread_cpu_per_execute_s": 9.9744685e-05
+                },
+                {
+                  "wall_per_execute_s": 0.00010230524494545535,
+                  "main_thread_cpu_per_execute_s": 0.00010232508000000028
+                },
+                {
+                  "wall_per_execute_s": 0.00010273616993799805,
+                  "main_thread_cpu_per_execute_s": 0.00010275547999999968
+                },
+                {
+                  "wall_per_execute_s": 0.00010186981002334505,
+                  "main_thread_cpu_per_execute_s": 0.00010188768500000057
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.46044921875,
+              "samples": [
+                {
+                  "wall_per_execute_s": 0.00032789582503028213,
+                  "main_thread_cpu_per_execute_s": 0.0002040303500000007
+                },
+                {
+                  "wall_per_execute_s": 0.0002808872300374787,
+                  "main_thread_cpu_per_execute_s": 0.00019690809999999947
+                },
+                {
+                  "wall_per_execute_s": 0.00028090227497159506,
+                  "main_thread_cpu_per_execute_s": 0.00019927303000000007
+                },
+                {
+                  "wall_per_execute_s": 0.00018162639506044798,
+                  "main_thread_cpu_per_execute_s": 0.00018080278999999978
+                },
+                {
+                  "wall_per_execute_s": 0.0002327226499619428,
+                  "main_thread_cpu_per_execute_s": 0.00019369998500000097
+                },
+                {
+                  "wall_per_execute_s": 0.00030350490502314644,
+                  "main_thread_cpu_per_execute_s": 0.0001710880799999992
+                },
+                {
+                  "wall_per_execute_s": 0.00017280482497881167,
+                  "main_thread_cpu_per_execute_s": 0.00015040181500000082
+                },
+                {
+                  "wall_per_execute_s": 0.00020301994503824972,
+                  "main_thread_cpu_per_execute_s": 0.00016809063000000068
+                },
+                {
+                  "wall_per_execute_s": 0.00022570008994080126,
+                  "main_thread_cpu_per_execute_s": 0.0001973411650000001
+                },
+                {
+                  "wall_per_execute_s": 0.0002893672249047086,
+                  "main_thread_cpu_per_execute_s": 0.00020346686999999974
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.46044921875,
+              "samples": [
+                {
+                  "wall_per_execute_s": 0.0002506838949921075,
+                  "main_thread_cpu_per_execute_s": 0.00019916016499999968
+                },
+                {
+                  "wall_per_execute_s": 0.0002037628750258591,
+                  "main_thread_cpu_per_execute_s": 0.00019165309999999992
+                },
+                {
+                  "wall_per_execute_s": 0.00019637647506897337,
+                  "main_thread_cpu_per_execute_s": 0.00019223821999999946
+                },
+                {
+                  "wall_per_execute_s": 0.00019569197989767419,
+                  "main_thread_cpu_per_execute_s": 0.00019369954500000008
+                },
+                {
+                  "wall_per_execute_s": 0.00019321497500641272,
+                  "main_thread_cpu_per_execute_s": 0.00019044863500000008
+                },
+                {
+                  "wall_per_execute_s": 0.00019620235994807444,
+                  "main_thread_cpu_per_execute_s": 0.00019355505499999982
+                },
+                {
+                  "wall_per_execute_s": 0.00020116243002121336,
+                  "main_thread_cpu_per_execute_s": 0.00019834330000000012
+                },
+                {
+                  "wall_per_execute_s": 0.0001925180399848614,
+                  "main_thread_cpu_per_execute_s": 0.00019032306999999915
+                },
+                {
+                  "wall_per_execute_s": 0.0001980888200341724,
+                  "main_thread_cpu_per_execute_s": 0.00019574057000000034
+                },
+                {
+                  "wall_per_execute_s": 0.00016996848993585444,
+                  "main_thread_cpu_per_execute_s": 0.0001678706299999999
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.96630859375,
+              "samples": [
+                {
+                  "wall_per_execute_s": 0.00011041890509659424,
+                  "main_thread_cpu_per_execute_s": 0.00011044526999999971
+                },
+                {
+                  "wall_per_execute_s": 0.00010874842497287319,
+                  "main_thread_cpu_per_execute_s": 0.00010857228500000038
+                },
+                {
+                  "wall_per_execute_s": 0.00011179542998434045,
+                  "main_thread_cpu_per_execute_s": 0.00011161953499999988
+                },
+                {
+                  "wall_per_execute_s": 0.00011110109000583179,
+                  "main_thread_cpu_per_execute_s": 0.00011112332000000002
+                },
+                {
+                  "wall_per_execute_s": 0.00010912740501225926,
+                  "main_thread_cpu_per_execute_s": 0.00010915275000000003
+                },
+                {
+                  "wall_per_execute_s": 0.00011814843499450944,
+                  "main_thread_cpu_per_execute_s": 0.00011797671499999996
+                },
+                {
+                  "wall_per_execute_s": 0.0001309048300026916,
+                  "main_thread_cpu_per_execute_s": 0.00013071592999999937
+                },
+                {
+                  "wall_per_execute_s": 0.00010940598498564214,
+                  "main_thread_cpu_per_execute_s": 0.00010942818500000007
+                },
+                {
+                  "wall_per_execute_s": 0.00011989254504442215,
+                  "main_thread_cpu_per_execute_s": 0.00011991591500000065
+                },
+                {
+                  "wall_per_execute_s": 0.00019153043496771715,
+                  "main_thread_cpu_per_execute_s": 0.00019131174999999944
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.96630859375,
+              "samples": [
+                {
+                  "wall_per_execute_s": 0.00019438823001109994,
+                  "main_thread_cpu_per_execute_s": 0.00018659103499999997
+                },
+                {
+                  "wall_per_execute_s": 0.00018806009000400082,
+                  "main_thread_cpu_per_execute_s": 0.0001850445649999999
+                },
+                {
+                  "wall_per_execute_s": 0.00019172219006577507,
+                  "main_thread_cpu_per_execute_s": 0.0001836181849999996
+                },
+                {
+                  "wall_per_execute_s": 0.00019560525004635565,
+                  "main_thread_cpu_per_execute_s": 0.0001870877549999994
+                },
+                {
+                  "wall_per_execute_s": 0.0003010706549684983,
+                  "main_thread_cpu_per_execute_s": 0.00020098473999999978
+                },
+                {
+                  "wall_per_execute_s": 0.00020640923001337795,
+                  "main_thread_cpu_per_execute_s": 0.00019441652999999893
+                },
+                {
+                  "wall_per_execute_s": 0.00020770791990798898,
+                  "main_thread_cpu_per_execute_s": 0.00019454226000000018
+                },
+                {
+                  "wall_per_execute_s": 0.00019892441996489653,
+                  "main_thread_cpu_per_execute_s": 0.0001890081499999996
+                },
+                {
+                  "wall_per_execute_s": 0.00019899676990462468,
+                  "main_thread_cpu_per_execute_s": 0.00018859522999999933
+                },
+                {
+                  "wall_per_execute_s": 0.00021685269006411546,
+                  "main_thread_cpu_per_execute_s": 0.00018660574000000095
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.4775390625,
+              "samples": [
+                {
+                  "wall_per_execute_s": 0.0001885103750100825,
+                  "main_thread_cpu_per_execute_s": 0.00018854083000000021
+                },
+                {
+                  "wall_per_execute_s": 0.0003122409099887591,
+                  "main_thread_cpu_per_execute_s": 0.00019751517999999968
+                },
+                {
+                  "wall_per_execute_s": 0.00020971095000277273,
+                  "main_thread_cpu_per_execute_s": 0.00019290607999999931
+                },
+                {
+                  "wall_per_execute_s": 0.00019720751501154155,
+                  "main_thread_cpu_per_execute_s": 0.00019345156000000085
+                },
+                {
+                  "wall_per_execute_s": 0.00021897487502428703,
+                  "main_thread_cpu_per_execute_s": 0.00019170719000000003
+                },
+                {
+                  "wall_per_execute_s": 0.00020083240000531077,
+                  "main_thread_cpu_per_execute_s": 0.00019349512000000013
+                },
+                {
+                  "wall_per_execute_s": 0.00019779872003709896,
+                  "main_thread_cpu_per_execute_s": 0.0001959677950000005
+                },
+                {
+                  "wall_per_execute_s": 0.0001975933300855104,
+                  "main_thread_cpu_per_execute_s": 0.00019520842499999968
+                },
+                {
+                  "wall_per_execute_s": 0.00018611905004945584,
+                  "main_thread_cpu_per_execute_s": 0.000182464965000001
+                },
+                {
+                  "wall_per_execute_s": 0.00018971665995195507,
+                  "main_thread_cpu_per_execute_s": 0.0001879850400000005
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.4775390625,
+              "samples": [
+                {
+                  "wall_per_execute_s": 0.00024261753511382268,
+                  "main_thread_cpu_per_execute_s": 0.00019445434999999954
+                },
+                {
+                  "wall_per_execute_s": 0.0001988481599255465,
+                  "main_thread_cpu_per_execute_s": 0.0001921836099999996
+                },
+                {
+                  "wall_per_execute_s": 0.0002234298900293652,
+                  "main_thread_cpu_per_execute_s": 0.00019395273000000102
+                },
+                {
+                  "wall_per_execute_s": 0.0001934949599672109,
+                  "main_thread_cpu_per_execute_s": 0.00019081611499999985
+                },
+                {
+                  "wall_per_execute_s": 0.00019759242000873202,
+                  "main_thread_cpu_per_execute_s": 0.0001913526649999997
+                },
+                {
+                  "wall_per_execute_s": 0.0003869761449459475,
+                  "main_thread_cpu_per_execute_s": 0.00020136415000000075
+                },
+                {
+                  "wall_per_execute_s": 0.0004595302400412038,
+                  "main_thread_cpu_per_execute_s": 0.000204070395
+                },
+                {
+                  "wall_per_execute_s": 0.0004129317100159824,
+                  "main_thread_cpu_per_execute_s": 0.0002019539150000005
+                },
+                {
+                  "wall_per_execute_s": 0.00031546099009574394,
+                  "main_thread_cpu_per_execute_s": 0.00020013725500000023
+                },
+                {
+                  "wall_per_execute_s": 0.00040930802002549173,
+                  "main_thread_cpu_per_execute_s": 0.0002029982600000002
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_per_execute_s": {
+              "value": 0.00017280482497881167,
+              "noise_floor": 0.45896672758328577,
+              "round_values": [
+                9.924132507876493e-05,
+                0.00017280482497881167,
+                0.00016996848993585444,
+                0.00010874842497287319,
+                0.00018806009000400082,
+                0.00018611905004945584,
+                0.0001934949599672109
+              ],
+              "n": 70,
+              "min": 9.924132507876493e-05,
+              "median": 0.0001962894175085239,
+              "max": 0.0004595302400412038
+            },
+            "main_thread_cpu_per_execute_s": {
+              "value": 0.0001678706299999999,
+              "noise_floor": 0.44704603777324986,
+              "round_values": [
+                9.926012500000025e-05,
+                0.00015040181500000082,
+                0.0001678706299999999,
+                0.00010857228500000038,
+                0.0001836181849999996,
+                0.000182464965000001,
+                0.00019081611499999985
+              ],
+              "n": 70,
+              "min": 9.926012500000025e-05,
+              "median": 0.00019038585249999963,
+              "max": 0.000204070395
+            }
+          }
+        },
+        "delayed": {
+          "rounds": [
+            {
+              "load_average_1m": 7.4130859375,
+              "samples": [
+                {
+                  "wall_per_execute_s": 0.00016326897501130587,
+                  "main_thread_cpu_per_execute_s": 0.00016329275500000018
+                },
+                {
+                  "wall_per_execute_s": 0.00025192651504767126,
+                  "main_thread_cpu_per_execute_s": 0.0002509818250000001
+                },
+                {
+                  "wall_per_execute_s": 0.0003976435599906836,
+                  "main_thread_cpu_per_execute_s": 0.000261687035
+                },
+                {
+                  "wall_per_execute_s": 0.00040585921000456436,
+                  "main_thread_cpu_per_execute_s": 0.0002588905499999999
+                },
+                {
+                  "wall_per_execute_s": 0.00041706099509610797,
+                  "main_thread_cpu_per_execute_s": 0.00026665590000000017
+                },
+                {
+                  "wall_per_execute_s": 0.0004067658650455996,
+                  "main_thread_cpu_per_execute_s": 0.0002666374199999999
+                },
+                {
+                  "wall_per_execute_s": 0.00026165643008425833,
+                  "main_thread_cpu_per_execute_s": 0.0002578714300000007
+                },
+                {
+                  "wall_per_execute_s": 0.0002954090799903497,
+                  "main_thread_cpu_per_execute_s": 0.0002602808449999994
+                },
+                {
+                  "wall_per_execute_s": 0.0002786771849787328,
+                  "main_thread_cpu_per_execute_s": 0.0002594377950000004
+                },
+                {
+                  "wall_per_execute_s": 0.0005837793899991084,
+                  "main_thread_cpu_per_execute_s": 0.00027255498000000047
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.4130859375,
+              "samples": [
+                {
+                  "wall_per_execute_s": 0.0005565137599478476,
+                  "main_thread_cpu_per_execute_s": 0.00024920410500000044
+                },
+                {
+                  "wall_per_execute_s": 0.000517545555048855,
+                  "main_thread_cpu_per_execute_s": 0.00025382898499999975
+                },
+                {
+                  "wall_per_execute_s": 0.00025238201997126455,
+                  "main_thread_cpu_per_execute_s": 0.00025146620000000006
+                },
+                {
+                  "wall_per_execute_s": 0.0002605549899453763,
+                  "main_thread_cpu_per_execute_s": 0.00025846905500000015
+                },
+                {
+                  "wall_per_execute_s": 0.00028161309004644865,
+                  "main_thread_cpu_per_execute_s": 0.00025639952000000024
+                },
+                {
+                  "wall_per_execute_s": 0.0003694485750747845,
+                  "main_thread_cpu_per_execute_s": 0.00026097333000000053
+                },
+                {
+                  "wall_per_execute_s": 0.0003427335950254928,
+                  "main_thread_cpu_per_execute_s": 0.00025960925999999994
+                },
+                {
+                  "wall_per_execute_s": 0.00026202869994449427,
+                  "main_thread_cpu_per_execute_s": 0.0002559547600000001
+                },
+                {
+                  "wall_per_execute_s": 0.0002641317748930305,
+                  "main_thread_cpu_per_execute_s": 0.00025496144
+                },
+                {
+                  "wall_per_execute_s": 0.0003647912500309758,
+                  "main_thread_cpu_per_execute_s": 0.00026227763999999934
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.46044921875,
+              "samples": [
+                {
+                  "wall_per_execute_s": 0.00026250486000208186,
+                  "main_thread_cpu_per_execute_s": 0.00025986669500000057
+                },
+                {
+                  "wall_per_execute_s": 0.00026113597996300084,
+                  "main_thread_cpu_per_execute_s": 0.00025857033000000086
+                },
+                {
+                  "wall_per_execute_s": 0.0002584174599905964,
+                  "main_thread_cpu_per_execute_s": 0.00025535409499999995
+                },
+                {
+                  "wall_per_execute_s": 0.000534441334893927,
+                  "main_thread_cpu_per_execute_s": 0.00026862503000000035
+                },
+                {
+                  "wall_per_execute_s": 0.0005997435050085187,
+                  "main_thread_cpu_per_execute_s": 0.00027178020000000023
+                },
+                {
+                  "wall_per_execute_s": 0.0005265239199798089,
+                  "main_thread_cpu_per_execute_s": 0.00026417825000000004
+                },
+                {
+                  "wall_per_execute_s": 0.0005108952800219413,
+                  "main_thread_cpu_per_execute_s": 0.0002602610449999998
+                },
+                {
+                  "wall_per_execute_s": 0.0002562959850183688,
+                  "main_thread_cpu_per_execute_s": 0.0002541710800000008
+                },
+                {
+                  "wall_per_execute_s": 0.0002587249950738624,
+                  "main_thread_cpu_per_execute_s": 0.0002565313299999994
+                },
+                {
+                  "wall_per_execute_s": 0.0002616880500863772,
+                  "main_thread_cpu_per_execute_s": 0.00025954397999999987
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.224609375,
+              "samples": [
+                {
+                  "wall_per_execute_s": 0.00034547873001429253,
+                  "main_thread_cpu_per_execute_s": 0.0002677653999999996
+                },
+                {
+                  "wall_per_execute_s": 0.00027594910992775114,
+                  "main_thread_cpu_per_execute_s": 0.00025802627000000023
+                },
+                {
+                  "wall_per_execute_s": 0.00016427677503088489,
+                  "main_thread_cpu_per_execute_s": 0.00016409297000000045
+                },
+                {
+                  "wall_per_execute_s": 0.000178023695043521,
+                  "main_thread_cpu_per_execute_s": 0.00017801073
+                },
+                {
+                  "wall_per_execute_s": 0.00026016795498435386,
+                  "main_thread_cpu_per_execute_s": 0.0002595596049999993
+                },
+                {
+                  "wall_per_execute_s": 0.0002647461398737505,
+                  "main_thread_cpu_per_execute_s": 0.0002539505600000003
+                },
+                {
+                  "wall_per_execute_s": 0.00026090857994859107,
+                  "main_thread_cpu_per_execute_s": 0.0002470561699999996
+                },
+                {
+                  "wall_per_execute_s": 0.00022888986000907608,
+                  "main_thread_cpu_per_execute_s": 0.00022562915500000004
+                },
+                {
+                  "wall_per_execute_s": 0.00021737649003625848,
+                  "main_thread_cpu_per_execute_s": 0.000217312905
+                },
+                {
+                  "wall_per_execute_s": 0.00017698893992928788,
+                  "main_thread_cpu_per_execute_s": 0.00017645656000000009
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.96630859375,
+              "samples": [
+                {
+                  "wall_per_execute_s": 0.00031861838506301864,
+                  "main_thread_cpu_per_execute_s": 0.00026426785499999994
+                },
+                {
+                  "wall_per_execute_s": 0.0004289933849941008,
+                  "main_thread_cpu_per_execute_s": 0.00026141871999999953
+                },
+                {
+                  "wall_per_execute_s": 0.0006226662549306638,
+                  "main_thread_cpu_per_execute_s": 0.00026985832000000045
+                },
+                {
+                  "wall_per_execute_s": 0.0007518234501185362,
+                  "main_thread_cpu_per_execute_s": 0.0002724765250000005
+                },
+                {
+                  "wall_per_execute_s": 0.0004738799099868629,
+                  "main_thread_cpu_per_execute_s": 0.00026515732000000015
+                },
+                {
+                  "wall_per_execute_s": 0.00029403526510577647,
+                  "main_thread_cpu_per_execute_s": 0.0002667883300000007
+                },
+                {
+                  "wall_per_execute_s": 0.0002927783850464039,
+                  "main_thread_cpu_per_execute_s": 0.00026949982000000093
+                },
+                {
+                  "wall_per_execute_s": 0.000279721989936661,
+                  "main_thread_cpu_per_execute_s": 0.0002655837499999991
+                },
+                {
+                  "wall_per_execute_s": 0.00028154888495919296,
+                  "main_thread_cpu_per_execute_s": 0.00026729474499999963
+                },
+                {
+                  "wall_per_execute_s": 0.0007835276749392505,
+                  "main_thread_cpu_per_execute_s": 0.0002701188700000001
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.17041015625,
+              "samples": [
+                {
+                  "wall_per_execute_s": 0.0002517666950006969,
+                  "main_thread_cpu_per_execute_s": 0.00024671680500000016
+                },
+                {
+                  "wall_per_execute_s": 0.0004107279749587178,
+                  "main_thread_cpu_per_execute_s": 0.0002610043200000001
+                },
+                {
+                  "wall_per_execute_s": 0.00034205574003863147,
+                  "main_thread_cpu_per_execute_s": 0.0002641353749999997
+                },
+                {
+                  "wall_per_execute_s": 0.0004494138300651684,
+                  "main_thread_cpu_per_execute_s": 0.0002619412099999996
+                },
+                {
+                  "wall_per_execute_s": 0.00044836865505203604,
+                  "main_thread_cpu_per_execute_s": 0.0002525023100000001
+                },
+                {
+                  "wall_per_execute_s": 0.00027370399999199435,
+                  "main_thread_cpu_per_execute_s": 0.0002578703000000004
+                },
+                {
+                  "wall_per_execute_s": 0.00031604067000444045,
+                  "main_thread_cpu_per_execute_s": 0.0002614111549999998
+                },
+                {
+                  "wall_per_execute_s": 0.0002664273150730878,
+                  "main_thread_cpu_per_execute_s": 0.000257140535
+                },
+                {
+                  "wall_per_execute_s": 0.00031348377000540496,
+                  "main_thread_cpu_per_execute_s": 0.00026402973999999915
+                },
+                {
+                  "wall_per_execute_s": 0.00023299249005503953,
+                  "main_thread_cpu_per_execute_s": 0.0002265297799999999
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 10.3203125,
+              "samples": [
+                {
+                  "wall_per_execute_s": 0.0002705179300392047,
+                  "main_thread_cpu_per_execute_s": 0.0002598987450000001
+                },
+                {
+                  "wall_per_execute_s": 0.00030188379998435266,
+                  "main_thread_cpu_per_execute_s": 0.0002596213650000001
+                },
+                {
+                  "wall_per_execute_s": 0.00030564747998141685,
+                  "main_thread_cpu_per_execute_s": 0.000262560275
+                },
+                {
+                  "wall_per_execute_s": 0.0003585549550189171,
+                  "main_thread_cpu_per_execute_s": 0.0002591988349999996
+                },
+                {
+                  "wall_per_execute_s": 0.0003488167849718593,
+                  "main_thread_cpu_per_execute_s": 0.0002615434300000008
+                },
+                {
+                  "wall_per_execute_s": 0.000337205864925636,
+                  "main_thread_cpu_per_execute_s": 0.0002529529050000001
+                },
+                {
+                  "wall_per_execute_s": 0.0002741021750262007,
+                  "main_thread_cpu_per_execute_s": 0.00026281492500000004
+                },
+                {
+                  "wall_per_execute_s": 0.00026041156495921314,
+                  "main_thread_cpu_per_execute_s": 0.0002494588050000002
+                },
+                {
+                  "wall_per_execute_s": 0.00024257630502688698,
+                  "main_thread_cpu_per_execute_s": 0.00024220753499999969
+                },
+                {
+                  "wall_per_execute_s": 0.00019910848495783285,
+                  "main_thread_cpu_per_execute_s": 0.0001991299999999996
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_per_execute_s": {
+              "value": 0.00023299249005503953,
+              "noise_floor": 0.3949449613837182,
+              "round_values": [
+                0.00016326897501130587,
+                0.00025238201997126455,
+                0.0002562959850183688,
+                0.00016427677503088489,
+                0.000279721989936661,
+                0.00023299249005503953,
+                0.00019910848495783285
+              ],
+              "n": 70,
+              "min": 0.00016326897501130587,
+              "median": 0.00028719573754642624,
+              "max": 0.0007835276749392505
+            },
+            "main_thread_cpu_per_execute_s": {
+              "value": 0.0002265297799999999,
+              "noise_floor": 0.3976435680995249,
+              "round_values": [
+                0.00016329275500000018,
+                0.00024920410500000044,
+                0.0002541710800000008,
+                0.00016409297000000045,
+                0.00026141871999999953,
+                0.0002265297799999999,
+                0.0001991299999999996
+              ],
+              "n": 70,
+              "min": 0.00016329275500000018,
+              "median": 0.00025955179249999955,
+              "max": 0.00027255498000000047
+            }
+          }
+        }
+      }
+    },
+    "cpu-sequential": {
+      "description": "the 32-kernel CPU workload, one node per item, on the default path",
+      "fingerprint": "24c81aed23992cbe385efe41fc94b6d9a2d15d8f8f6c1612261842c4d9bee0b6",
+      "frozen": true,
+      "uses_hamilton": true,
+      "metrics": [
+        "wall_s",
+        "main_thread_cpu_s"
+      ],
+      "warmup": 1,
+      "samples_per_round": 3,
+      "settings": {
+        "items": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31
+        ],
+        "iterations": 262144,
+        "fixture_sha256": "b4b2c7c9d74ec26d31e8ccdb4b8123a587c94aee5cb4bd812647b567bc1755c0",
+        "path": "default"
+      },
+      "sides": {
+        "branch-point": {
+          "rounds": [
+            {
+              "load_average_1m": 10.21435546875,
+              "samples": [
+                {
+                  "wall_s": 0.9238359309965745,
+                  "main_thread_cpu_s": 0.7868108399999998
+                },
+                {
+                  "wall_s": 0.7344384420139249,
+                  "main_thread_cpu_s": 0.7343800369999998
+                },
+                {
+                  "wall_s": 0.6601982149877585,
+                  "main_thread_cpu_s": 0.6601974290000001
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.1044921875,
+              "samples": [
+                {
+                  "wall_s": 0.6960895560041536,
+                  "main_thread_cpu_s": 0.6946735039999998
+                },
+                {
+                  "wall_s": 0.8040787450154312,
+                  "main_thread_cpu_s": 0.7760366220000003
+                },
+                {
+                  "wall_s": 1.0429563579964451,
+                  "main_thread_cpu_s": 0.9557258010000003
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.6953125,
+              "samples": [
+                {
+                  "wall_s": 0.8511260719969869,
+                  "main_thread_cpu_s": 0.8276717999999998
+                },
+                {
+                  "wall_s": 0.6997358119988348,
+                  "main_thread_cpu_s": 0.6987294229999996
+                },
+                {
+                  "wall_s": 0.7233370099856984,
+                  "main_thread_cpu_s": 0.7222572189999998
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.6181640625,
+              "samples": [
+                {
+                  "wall_s": 0.6432528299919795,
+                  "main_thread_cpu_s": 0.6405903159999999
+                },
+                {
+                  "wall_s": 0.6675055439991411,
+                  "main_thread_cpu_s": 0.6670079929999999
+                },
+                {
+                  "wall_s": 0.6343211340135895,
+                  "main_thread_cpu_s": 0.6329824290000001
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.6181640625,
+              "samples": [
+                {
+                  "wall_s": 0.64320334198419,
+                  "main_thread_cpu_s": 0.6427206589999999
+                },
+                {
+                  "wall_s": 0.85900875198422,
+                  "main_thread_cpu_s": 0.821966296
+                },
+                {
+                  "wall_s": 0.6776016009971499,
+                  "main_thread_cpu_s": 0.6775677029999998
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.9921875,
+              "samples": [
+                {
+                  "wall_s": 0.7476163179962896,
+                  "main_thread_cpu_s": 0.7475244719999998
+                },
+                {
+                  "wall_s": 0.7623862059845123,
+                  "main_thread_cpu_s": 0.746570352
+                },
+                {
+                  "wall_s": 0.7075312560191378,
+                  "main_thread_cpu_s": 0.7074813399999997
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.1533203125,
+              "samples": [
+                {
+                  "wall_s": 0.6810908649931662,
+                  "main_thread_cpu_s": 0.6810743719999999
+                },
+                {
+                  "wall_s": 0.6798629910044838,
+                  "main_thread_cpu_s": 0.6798119959999998
+                },
+                {
+                  "wall_s": 0.7519447020022199,
+                  "main_thread_cpu_s": 0.7518893219999998
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.6798629910044838,
+              "noise_floor": 0.08315273924694623,
+              "round_values": [
+                0.6601982149877585,
+                0.6960895560041536,
+                0.6997358119988348,
+                0.6343211340135895,
+                0.64320334198419,
+                0.7075312560191378,
+                0.6798629910044838
+              ],
+              "n": 21,
+              "min": 0.6343211340135895,
+              "median": 0.7075312560191378,
+              "max": 1.0429563579964451
+            },
+            "main_thread_cpu_s": {
+              "value": 0.6798119959999998,
+              "noise_floor": 0.0823886079232997,
+              "round_values": [
+                0.6601974290000001,
+                0.6946735039999998,
+                0.6987294229999996,
+                0.6329824290000001,
+                0.6427206589999999,
+                0.7074813399999997,
+                0.6798119959999998
+              ],
+              "n": 21,
+              "min": 0.6329824290000001,
+              "median": 0.7074813399999997,
+              "max": 0.9557258010000003
+            }
+          }
+        },
+        "delayed": {
+          "rounds": [
+            {
+              "load_average_1m": 10.21435546875,
+              "samples": [
+                {
+                  "wall_s": 0.7075427990057506,
+                  "main_thread_cpu_s": 0.7070841130000001
+                },
+                {
+                  "wall_s": 0.8438507269893307,
+                  "main_thread_cpu_s": 0.8351358809999998
+                },
+                {
+                  "wall_s": 0.6967383789888117,
+                  "main_thread_cpu_s": 0.6921452410000004
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.63623046875,
+              "samples": [
+                {
+                  "wall_s": 0.6649538990168367,
+                  "main_thread_cpu_s": 0.6647087519999999
+                },
+                {
+                  "wall_s": 0.6822297069884371,
+                  "main_thread_cpu_s": 0.6821832170000004
+                },
+                {
+                  "wall_s": 0.7848333910224028,
+                  "main_thread_cpu_s": 0.7817818560000003
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.23876953125,
+              "samples": [
+                {
+                  "wall_s": 0.7054316530120559,
+                  "main_thread_cpu_s": 0.7051725690000001
+                },
+                {
+                  "wall_s": 0.7066265679895878,
+                  "main_thread_cpu_s": 0.7064218229999999
+                },
+                {
+                  "wall_s": 1.0281656089937314,
+                  "main_thread_cpu_s": 0.955621169
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.0205078125,
+              "samples": [
+                {
+                  "wall_s": 1.412477851001313,
+                  "main_thread_cpu_s": 1.0133224099999998
+                },
+                {
+                  "wall_s": 0.9818340089987032,
+                  "main_thread_cpu_s": 0.9224818889999997
+                },
+                {
+                  "wall_s": 0.6431357479887083,
+                  "main_thread_cpu_s": 0.6409352149999998
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.28955078125,
+              "samples": [
+                {
+                  "wall_s": 0.8034396740258671,
+                  "main_thread_cpu_s": 0.7669840239999999
+                },
+                {
+                  "wall_s": 0.694499708013609,
+                  "main_thread_cpu_s": 0.6908349039999999
+                },
+                {
+                  "wall_s": 0.7092667809920385,
+                  "main_thread_cpu_s": 0.707615133
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.4267578125,
+              "samples": [
+                {
+                  "wall_s": 0.6522275429742876,
+                  "main_thread_cpu_s": 0.6521615330000001
+                },
+                {
+                  "wall_s": 0.6649800549785141,
+                  "main_thread_cpu_s": 0.6648407249999999
+                },
+                {
+                  "wall_s": 0.7108548629912548,
+                  "main_thread_cpu_s": 0.7094547690000002
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.1533203125,
+              "samples": [
+                {
+                  "wall_s": 0.7320863659842871,
+                  "main_thread_cpu_s": 0.7312675300000002
+                },
+                {
+                  "wall_s": 0.6356934040086344,
+                  "main_thread_cpu_s": 0.635666869
+                },
+                {
+                  "wall_s": 0.6520994919992518,
+                  "main_thread_cpu_s": 0.6521004120000002
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.6649538990168367,
+              "noise_floor": 0.08061104849427495,
+              "round_values": [
+                0.6967383789888117,
+                0.6649538990168367,
+                0.7054316530120559,
+                0.6431357479887083,
+                0.694499708013609,
+                0.6522275429742876,
+                0.6356934040086344
+              ],
+              "n": 21,
+              "min": 0.6356934040086344,
+              "median": 0.7066265679895878,
+              "max": 1.412477851001313
+            },
+            "main_thread_cpu_s": {
+              "value": 0.6647087519999999,
+              "noise_floor": 0.0770412994351556,
+              "round_values": [
+                0.6921452410000004,
+                0.6647087519999999,
+                0.7051725690000001,
+                0.6409352149999998,
+                0.6908349039999999,
+                0.6521615330000001,
+                0.635666869
+              ],
+              "n": 21,
+              "min": 0.635666869,
+              "median": 0.7064218229999999,
+              "max": 1.0133224099999998
+            }
+          }
+        }
+      }
+    },
+    "cpu-mapped-4": {
+      "description": "the 32-kernel CPU workload, expanded and collected, with four MultiThreadingExecutor workers on the task-based path",
+      "fingerprint": "c694f340750ff43a56494e4b9bff5e33cde8df023b638e275bb9714839716e9b",
+      "frozen": true,
+      "uses_hamilton": true,
+      "metrics": [
+        "wall_s",
+        "main_thread_cpu_s"
+      ],
+      "warmup": 1,
+      "samples_per_round": 3,
+      "settings": {
+        "items": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31
+        ],
+        "iterations": 262144,
+        "fixture_sha256": "da4360607f4cadcbea487e7ee91b3f6cd6517a57fd667b31db8f37ec7077ccac",
+        "path": "task-based",
+        "local_executor": "SynchronousLocalTaskExecutor",
+        "remote_executor": "MultiThreadingExecutor(max_tasks=4)"
+      },
+      "sides": {
+        "branch-point": {
+          "rounds": [
+            {
+              "load_average_1m": 8.66015625,
+              "samples": [
+                {
+                  "wall_s": 1.2033409060095437,
+                  "main_thread_cpu_s": 0.358766323
+                },
+                {
+                  "wall_s": 1.2069391729892232,
+                  "main_thread_cpu_s": 0.35280787599999996
+                },
+                {
+                  "wall_s": 1.43392174798646,
+                  "main_thread_cpu_s": 0.4271014489999998
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.76513671875,
+              "samples": [
+                {
+                  "wall_s": 1.3025112220202573,
+                  "main_thread_cpu_s": 0.35634667
+                },
+                {
+                  "wall_s": 1.1227721399918664,
+                  "main_thread_cpu_s": 0.37130950499999993
+                },
+                {
+                  "wall_s": 1.4870727249945048,
+                  "main_thread_cpu_s": 0.3144722900000001
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.8642578125,
+              "samples": [
+                {
+                  "wall_s": 1.1007881939876825,
+                  "main_thread_cpu_s": 0.32277069
+                },
+                {
+                  "wall_s": 1.3648964739986695,
+                  "main_thread_cpu_s": 0.44287077099999994
+                },
+                {
+                  "wall_s": 1.2680514300009236,
+                  "main_thread_cpu_s": 0.360999536
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.68408203125,
+              "samples": [
+                {
+                  "wall_s": 1.126301254000282,
+                  "main_thread_cpu_s": 0.337297995
+                },
+                {
+                  "wall_s": 1.1111011519969907,
+                  "main_thread_cpu_s": 0.39266131000000004
+                },
+                {
+                  "wall_s": 1.0047364360070787,
+                  "main_thread_cpu_s": 0.3097479769999998
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.30859375,
+              "samples": [
+                {
+                  "wall_s": 2.0199554249993525,
+                  "main_thread_cpu_s": 0.652181334
+                },
+                {
+                  "wall_s": 1.4721509709779639,
+                  "main_thread_cpu_s": 0.444617866
+                },
+                {
+                  "wall_s": 1.4663916660065297,
+                  "main_thread_cpu_s": 0.49247654400000007
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 6.52880859375,
+              "samples": [
+                {
+                  "wall_s": 1.2985907179827336,
+                  "main_thread_cpu_s": 0.32069722899999986
+                },
+                {
+                  "wall_s": 1.1805756090034265,
+                  "main_thread_cpu_s": 0.352431081
+                },
+                {
+                  "wall_s": 0.9432980979909189,
+                  "main_thread_cpu_s": 0.22922523100000003
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 6.326171875,
+              "samples": [
+                {
+                  "wall_s": 1.9122981939872261,
+                  "main_thread_cpu_s": 0.5394527219999998
+                },
+                {
+                  "wall_s": 1.7287748279923107,
+                  "main_thread_cpu_s": 0.4363332959999999
+                },
+                {
+                  "wall_s": 1.4209987360227387,
+                  "main_thread_cpu_s": 0.3924106479999998
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 1.1227721399918664,
+              "noise_floor": 0.37074512734050874,
+              "round_values": [
+                1.2033409060095437,
+                1.1227721399918664,
+                1.1007881939876825,
+                1.0047364360070787,
+                1.4663916660065297,
+                0.9432980979909189,
+                1.4209987360227387
+              ],
+              "n": 21,
+              "min": 0.9432980979909189,
+              "median": 1.2985907179827336,
+              "max": 2.0199554249993525
+            },
+            "main_thread_cpu_s": {
+              "value": 0.32277069,
+              "noise_floor": 0.25610339959926354,
+              "round_values": [
+                0.35280787599999996,
+                0.3144722900000001,
+                0.32277069,
+                0.3097479769999998,
+                0.444617866,
+                0.22922523100000003,
+                0.3924106479999998
+              ],
+              "n": 21,
+              "min": 0.22922523100000003,
+              "median": 0.360999536,
+              "max": 0.652181334
+            }
+          }
+        },
+        "delayed": {
+          "rounds": [
+            {
+              "load_average_1m": 8.20654296875,
+              "samples": [
+                {
+                  "wall_s": 1.5028479040192906,
+                  "main_thread_cpu_s": 0.36669312500000006
+                },
+                {
+                  "wall_s": 1.2763928650238086,
+                  "main_thread_cpu_s": 0.285720419
+                },
+                {
+                  "wall_s": 1.2201917250058614,
+                  "main_thread_cpu_s": 0.24843688200000003
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 9.26708984375,
+              "samples": [
+                {
+                  "wall_s": 1.2885942320281174,
+                  "main_thread_cpu_s": 0.20575749399999999
+                },
+                {
+                  "wall_s": 1.1781389199895784,
+                  "main_thread_cpu_s": 0.3901198750000001
+                },
+                {
+                  "wall_s": 1.17825586599065,
+                  "main_thread_cpu_s": 0.37771916800000005
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.314453125,
+              "samples": [
+                {
+                  "wall_s": 1.0967456289799884,
+                  "main_thread_cpu_s": 0.31600644999999994
+                },
+                {
+                  "wall_s": 1.6233398770273197,
+                  "main_thread_cpu_s": 0.2787052029999999
+                },
+                {
+                  "wall_s": 1.242566626984626,
+                  "main_thread_cpu_s": 0.29616211400000014
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.888671875,
+              "samples": [
+                {
+                  "wall_s": 1.365427942975657,
+                  "main_thread_cpu_s": 0.3097117300000001
+                },
+                {
+                  "wall_s": 1.091241091984557,
+                  "main_thread_cpu_s": 0.36986194299999986
+                },
+                {
+                  "wall_s": 1.3395213570038322,
+                  "main_thread_cpu_s": 0.4515886499999999
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.72314453125,
+              "samples": [
+                {
+                  "wall_s": 1.0945215829997323,
+                  "main_thread_cpu_s": 0.3740497290000001
+                },
+                {
+                  "wall_s": 1.2760683929955121,
+                  "main_thread_cpu_s": 0.37511152700000006
+                },
+                {
+                  "wall_s": 1.7561694319883827,
+                  "main_thread_cpu_s": 0.544101416
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.3447265625,
+              "samples": [
+                {
+                  "wall_s": 1.7057556890067644,
+                  "main_thread_cpu_s": 0.390211332
+                },
+                {
+                  "wall_s": 1.6451856750063598,
+                  "main_thread_cpu_s": 0.39469531599999996
+                },
+                {
+                  "wall_s": 1.1032894210075028,
+                  "main_thread_cpu_s": 0.3218806839999999
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 5.8994140625,
+              "samples": [
+                {
+                  "wall_s": 1.8247481239959598,
+                  "main_thread_cpu_s": 0.489268834
+                },
+                {
+                  "wall_s": 1.4769761780044064,
+                  "main_thread_cpu_s": 0.415686252
+                },
+                {
+                  "wall_s": 1.133606075978605,
+                  "main_thread_cpu_s": 0.40552228599999984
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 1.1032894210075028,
+              "noise_floor": 0.07578912241675292,
+              "round_values": [
+                1.2201917250058614,
+                1.1781389199895784,
+                1.0967456289799884,
+                1.091241091984557,
+                1.0945215829997323,
+                1.1032894210075028,
+                1.133606075978605
+              ],
+              "n": 21,
+              "min": 1.091241091984557,
+              "median": 1.2763928650238086,
+              "max": 1.8247481239959598
+            },
+            "main_thread_cpu_s": {
+              "value": 0.3097117300000001,
+              "noise_floor": 0.40557988229893666,
+              "round_values": [
+                0.24843688200000003,
+                0.20575749399999999,
+                0.2787052029999999,
+                0.3097117300000001,
+                0.3740497290000001,
+                0.3218806839999999,
+                0.40552228599999984
+              ],
+              "n": 21,
+              "min": 0.20575749399999999,
+              "median": 0.3740497290000001,
+              "max": 0.544101416
+            }
+          }
+        }
+      }
+    },
+    "cpu-threadpool-4": {
+      "description": "the 32-kernel CPU workload on a plain ThreadPoolExecutor with four workers, without Hamilton",
+      "fingerprint": "42a6920f00df7dc1e10ab3f35fe7dac8179fef4724802a36b14185ac0478149c",
+      "frozen": true,
+      "uses_hamilton": false,
+      "metrics": [
+        "wall_s",
+        "main_thread_cpu_s"
+      ],
+      "warmup": 1,
+      "samples_per_round": 3,
+      "settings": {
+        "items": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31
+        ],
+        "iterations": 262144,
+        "fixture_sha256": "b4b2c7c9d74ec26d31e8ccdb4b8123a587c94aee5cb4bd812647b567bc1755c0",
+        "workers": 4,
+        "pool": "ThreadPoolExecutor"
+      },
+      "sides": {
+        "branch-point": {
+          "rounds": [
+            {
+              "load_average_1m": 5.8955078125,
+              "samples": [
+                {
+                  "wall_s": 1.3682583130139392,
+                  "main_thread_cpu_s": 0.005530368000000008
+                },
+                {
+                  "wall_s": 1.3541265169915278,
+                  "main_thread_cpu_s": 0.008366050000000014
+                },
+                {
+                  "wall_s": 1.3079242990061175,
+                  "main_thread_cpu_s": 0.006229462999999991
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 5.21630859375,
+              "samples": [
+                {
+                  "wall_s": 0.6704217339865863,
+                  "main_thread_cpu_s": 0.0031098159999999875
+                },
+                {
+                  "wall_s": 0.7015746709948871,
+                  "main_thread_cpu_s": 0.002617649999999999
+                },
+                {
+                  "wall_s": 0.9388383879850153,
+                  "main_thread_cpu_s": 0.003470639999999997
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 4.95849609375,
+              "samples": [
+                {
+                  "wall_s": 1.2597241969779134,
+                  "main_thread_cpu_s": 0.003910992000000002
+                },
+                {
+                  "wall_s": 0.9681549459928647,
+                  "main_thread_cpu_s": 0.004419698999999999
+                },
+                {
+                  "wall_s": 1.0926170099992305,
+                  "main_thread_cpu_s": 0.0026220930000000198
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 4.650390625,
+              "samples": [
+                {
+                  "wall_s": 0.6994092919921968,
+                  "main_thread_cpu_s": 0.0027675600000000022
+                },
+                {
+                  "wall_s": 0.7359171860152856,
+                  "main_thread_cpu_s": 0.002242759000000011
+                },
+                {
+                  "wall_s": 1.1699066099827178,
+                  "main_thread_cpu_s": 0.002486163999999985
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 4.8388671875,
+              "samples": [
+                {
+                  "wall_s": 1.1799911139823962,
+                  "main_thread_cpu_s": 0.0029536560000000267
+                },
+                {
+                  "wall_s": 1.1200882460107096,
+                  "main_thread_cpu_s": 0.002341240999999994
+                },
+                {
+                  "wall_s": 1.38858089200221,
+                  "main_thread_cpu_s": 0.002825952999999992
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 5.7734375,
+              "samples": [
+                {
+                  "wall_s": 1.4954013410024345,
+                  "main_thread_cpu_s": 0.002803184000000014
+                },
+                {
+                  "wall_s": 1.510890340025071,
+                  "main_thread_cpu_s": 0.0028970260000000247
+                },
+                {
+                  "wall_s": 1.570275786012644,
+                  "main_thread_cpu_s": 0.002726371999999977
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 7.279296875,
+              "samples": [
+                {
+                  "wall_s": 1.514270593994297,
+                  "main_thread_cpu_s": 0.002809465000000011
+                },
+                {
+                  "wall_s": 1.0303054100077134,
+                  "main_thread_cpu_s": 0.0025752510000000006
+                },
+                {
+                  "wall_s": 0.771467222017236,
+                  "main_thread_cpu_s": 0.0029696830000000007
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.9681549459928647,
+              "noise_floor": 0.6285305978475118,
+              "round_values": [
+                1.3079242990061175,
+                0.6704217339865863,
+                0.9681549459928647,
+                0.6994092919921968,
+                1.1200882460107096,
+                1.4954013410024345,
+                0.771467222017236
+              ],
+              "n": 21,
+              "min": 0.6704217339865863,
+              "median": 1.1699066099827178,
+              "max": 1.570275786012644
+            },
+            "main_thread_cpu_s": {
+              "value": 0.002617649999999999,
+              "noise_floor": 0.1471285313162505,
+              "round_values": [
+                0.005530368000000008,
+                0.002617649999999999,
+                0.0026220930000000198,
+                0.002242759000000011,
+                0.002341240999999994,
+                0.002726371999999977,
+                0.0025752510000000006
+              ],
+              "n": 21,
+              "min": 0.002242759000000011,
+              "median": 0.002825952999999992,
+              "max": 0.008366050000000014
+            }
+          }
+        },
+        "delayed": {
+          "rounds": [
+            {
+              "load_average_1m": 5.58349609375,
+              "samples": [
+                {
+                  "wall_s": 1.0378012169967405,
+                  "main_thread_cpu_s": 0.004923634999999982
+                },
+                {
+                  "wall_s": 1.195724577002693,
+                  "main_thread_cpu_s": 0.005729089999999992
+                },
+                {
+                  "wall_s": 1.1060344279976562,
+                  "main_thread_cpu_s": 0.004674942999999987
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 5.21630859375,
+              "samples": [
+                {
+                  "wall_s": 0.6674919939832762,
+                  "main_thread_cpu_s": 0.0033336629999999867
+                },
+                {
+                  "wall_s": 0.709947438997915,
+                  "main_thread_cpu_s": 0.0026549290000000003
+                },
+                {
+                  "wall_s": 0.6765613730240148,
+                  "main_thread_cpu_s": 0.0028928079999999967
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 4.88134765625,
+              "samples": [
+                {
+                  "wall_s": 0.741951844014693,
+                  "main_thread_cpu_s": 0.0021725850000000047
+                },
+                {
+                  "wall_s": 0.746355887997197,
+                  "main_thread_cpu_s": 0.0032206840000000014
+                },
+                {
+                  "wall_s": 0.7004420800076332,
+                  "main_thread_cpu_s": 0.0026571659999999886
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 4.650390625,
+              "samples": [
+                {
+                  "wall_s": 0.7120458899880759,
+                  "main_thread_cpu_s": 0.0034764620000000135
+                },
+                {
+                  "wall_s": 0.6666565660270862,
+                  "main_thread_cpu_s": 0.002985089999999996
+                },
+                {
+                  "wall_s": 0.6641340120113455,
+                  "main_thread_cpu_s": 0.0026834000000000024
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 5.09228515625,
+              "samples": [
+                {
+                  "wall_s": 1.1360752719920129,
+                  "main_thread_cpu_s": 0.002111784999999977
+                },
+                {
+                  "wall_s": 1.154288705001818,
+                  "main_thread_cpu_s": 0.0023783709999999902
+                },
+                {
+                  "wall_s": 0.975441671005683,
+                  "main_thread_cpu_s": 0.0021779130000000313
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 5.4052734375,
+              "samples": [
+                {
+                  "wall_s": 1.8015220050001517,
+                  "main_thread_cpu_s": 0.0026152650000000055
+                },
+                {
+                  "wall_s": 1.5887153269723058,
+                  "main_thread_cpu_s": 0.002459216000000014
+                },
+                {
+                  "wall_s": 1.6811834050167818,
+                  "main_thread_cpu_s": 0.00284071800000002
+                }
+              ],
+              "gil_enabled_after_setup": true
+            },
+            {
+              "load_average_1m": 8.21826171875,
+              "samples": [
+                {
+                  "wall_s": 0.769465259014396,
+                  "main_thread_cpu_s": 0.0018607780000000074
+                },
+                {
+                  "wall_s": 0.7333677470160183,
+                  "main_thread_cpu_s": 0.002361561000000012
+                },
+                {
+                  "wall_s": 0.7470331480144523,
+                  "main_thread_cpu_s": 0.0031102359999999885
+                }
+              ],
+              "gil_enabled_after_setup": true
+            }
+          ],
+          "summary": {
+            "wall_s": {
+              "value": 0.7333677470160183,
+              "noise_floor": 0.5049434264326544,
+              "round_values": [
+                1.0378012169967405,
+                0.6674919939832762,
+                0.7004420800076332,
+                0.6641340120113455,
+                0.975441671005683,
+                1.5887153269723058,
+                0.7333677470160183
+              ],
+              "n": 21,
+              "min": 0.6641340120113455,
+              "median": 0.7470331480144523,
+              "max": 1.8015220050001517
+            },
+            "main_thread_cpu_s": {
+              "value": 0.002459216000000014,
+              "noise_floor": 0.2324378989076283,
+              "round_values": [
+                0.004674942999999987,
+                0.0026549290000000003,
+                0.0021725850000000047,
+                0.0026834000000000024,
+                0.002111784999999977,
+                0.002459216000000014,
+                0.0018607780000000074
+              ],
+              "n": 21,
+              "min": 0.0018607780000000074,
+              "median": 0.0026834000000000024,
+              "max": 0.005729089999999992
+            }
+          }
+        }
+      }
+    }
+  },
+  "warnings": [],
+  "finished_utc": "2026-11-17T09:52:41+00:00",
+  "comparison": [
+    {
+      "scenario": "import-driver",
+      "metric": "wall_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": 0.029754772286257447,
+      "noise_floor": 0.7464688287888249,
+      "verdict": "no measurable difference"
+    },
+    {
+      "scenario": "import-driver",
+      "metric": "main_thread_cpu_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": 0.00210423912284452,
+      "noise_floor": 0.45854255967748325,
+      "verdict": "no measurable difference"
+    },
+    {
+      "scenario": "build-1k",
+      "metric": "wall_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": 0.04339323231206427,
+      "noise_floor": 0.2612395996413628,
+      "verdict": "no measurable difference"
+    },
+    {
+      "scenario": "build-1k",
+      "metric": "main_thread_cpu_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": 0.041168186224709746,
+      "noise_floor": 0.2595265405504703,
+      "verdict": "no measurable difference"
+    },
+    {
+      "scenario": "build-10k",
+      "metric": "wall_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": 0.01601733078761236,
+      "noise_floor": 0.5406955630622186,
+      "verdict": "no measurable difference"
+    },
+    {
+      "scenario": "build-10k",
+      "metric": "main_thread_cpu_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": 0.015848029762479454,
+      "noise_floor": 0.348906044984207,
+      "verdict": "no measurable difference"
+    },
+    {
+      "scenario": "execute-default-1k",
+      "metric": "wall_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": 0.6288072726269942,
+      "noise_floor": 0.03579574801685206,
+      "verdict": "slower"
+    },
+    {
+      "scenario": "execute-default-1k",
+      "metric": "main_thread_cpu_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": 0.6284273171982351,
+      "noise_floor": 0.03650809876840573,
+      "verdict": "slower"
+    },
+    {
+      "scenario": "execute-default-10k",
+      "metric": "wall_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": 0.5671046224266221,
+      "noise_floor": 0.05680430047898946,
+      "verdict": "slower"
+    },
+    {
+      "scenario": "execute-default-10k",
+      "metric": "main_thread_cpu_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": 0.5670627737791396,
+      "noise_floor": 0.0549981132220386,
+      "verdict": "slower"
+    },
+    {
+      "scenario": "execute-tasks-sync-1k",
+      "metric": "wall_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": -0.10861568604415217,
+      "noise_floor": 0.9729541556007608,
+      "verdict": "no measurable difference"
+    },
+    {
+      "scenario": "execute-tasks-sync-1k",
+      "metric": "main_thread_cpu_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": -0.10018998549008862,
+      "noise_floor": 0.8217670702379606,
+      "verdict": "no measurable difference"
+    },
+    {
+      "scenario": "tiny-nodes",
+      "metric": "wall_per_execute_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": 0.3482985216622725,
+      "noise_floor": 0.45896672758328577,
+      "verdict": "no measurable difference"
+    },
+    {
+      "scenario": "tiny-nodes",
+      "metric": "main_thread_cpu_per_execute_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": 0.3494306895732746,
+      "noise_floor": 0.44704603777324986,
+      "verdict": "no measurable difference"
+    },
+    {
+      "scenario": "cpu-sequential",
+      "metric": "wall_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": -0.021929553726140028,
+      "noise_floor": 0.08315273924694623,
+      "verdict": "no measurable difference"
+    },
+    {
+      "scenario": "cpu-sequential",
+      "metric": "main_thread_cpu_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": -0.022216795362345776,
+      "noise_floor": 0.0823886079232997,
+      "verdict": "no measurable difference"
+    },
+    {
+      "scenario": "cpu-mapped-4",
+      "metric": "wall_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": -0.01735233560792193,
+      "noise_floor": 0.37074512734050874,
+      "verdict": "no measurable difference"
+    },
+    {
+      "scenario": "cpu-mapped-4",
+      "metric": "main_thread_cpu_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": -0.04045894006051154,
+      "noise_floor": 0.40557988229893666,
+      "verdict": "no measurable difference"
+    },
+    {
+      "scenario": "cpu-threadpool-4",
+      "metric": "wall_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": -0.24250994115003655,
+      "noise_floor": 0.6285305978475118,
+      "verdict": "no measurable difference"
+    },
+    {
+      "scenario": "cpu-threadpool-4",
+      "metric": "main_thread_cpu_s",
+      "baseline": "branch-point",
+      "side": "delayed",
+      "gap": -0.060525280308668106,
+      "noise_floor": 0.2324378989076283,
+      "verdict": "no measurable difference"
+    }
+  ]
+}
